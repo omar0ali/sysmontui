@@ -31,65 +31,61 @@ func New() (*Screen, error) {
 	}, nil
 }
 
-func (s *Screen) Run(update func(), render func(), events func(ev tcell.Event)) {
-	ticker := time.NewTicker(time.Second / 29) // 30 fps
-	defer ticker.Stop()
+func (s *Screen) keyEvents(events func(ev *tcell.EventKey)) {
+	for {
+		ev := <-s.screen.EventQ()
+		switch ev := ev.(type) {
+		case *tcell.EventResize:
+			s.screen.Sync()
+		case *tcell.EventKey:
 
-	// input
-	go func() {
-		for {
-			ev := <-s.screen.EventQ()
-			switch ev := ev.(type) {
-			case *tcell.EventResize:
-				s.screen.Sync()
-			case *tcell.EventKey:
-				switch ev.Key() {
-				case tcell.KeyEscape:
-					s.Exit()
-				}
+			switch ev.Key() {
+			case tcell.KeyEscape:
+				s.Exit()
 			}
+		}
+		if ev, ok := ev.(*tcell.EventKey); ok {
 			events(ev)
 		}
-	}()
+	}
+}
 
-	// display
-
+func (s *Screen) refreshScreen(update func(delta float64), render func()) {
+	ticker := time.NewTicker(time.Second / 29) // 30 fps
+	defer ticker.Stop()
 	last := time.Now()
-	var fps float64
-
 	for {
 		select {
 		case <-ticker.C:
-			// Calculate FPS
+			// get elapsed time
 			now := time.Now()
 			elapsed := now.Sub(last).Seconds()
 			last = now
-			if elapsed > 0 {
-				fps = 1 / elapsed
-			}
 
-			// Clear the screen
-			s.screen.Clear()
+			update(elapsed)  // update logic
+			s.screen.Clear() // clear screen
+			render()         // render screen
 
-			// Update logic
-			update()
-
-			// Render your content
-			render()
-
-			// Draw FPS at top-left corner
-			fpsStr := fmt.Sprintf("FPS: %.1f", fps)
+			fpsStr := fmt.Sprintf("FPS: %.1f", 1/elapsed)
 			for i, r := range fpsStr {
 				s.SetContent(i, 0, r)
 			}
 
-			// Show the buffer
-			s.screen.Show()
-
-		case <-s.quit:
+			s.screen.Show() // show what has been rendered on screen
+		case <-s.quit: // quit signal
 			return
 		}
 	}
+
+}
+
+func (s *Screen) Run(
+	update func(elapsed float64),
+	render func(),
+	events func(ev *tcell.EventKey),
+) {
+	go s.keyEvents(events)          // read input on a go routine
+	s.refreshScreen(update, render) // show screen and refresh
 }
 
 func (s *Screen) Color(styleColor tcell.Color) {
