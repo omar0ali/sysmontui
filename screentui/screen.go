@@ -1,4 +1,4 @@
-package screen
+package screentui
 
 import (
 	"fmt"
@@ -9,13 +9,19 @@ import (
 
 var style tcell.Style
 
-type Screen struct {
-	screen tcell.Screen
-	style  tcell.Style
-	quit   chan struct{}
+type ScreenOption struct {
+	Ticker  time.Duration
+	ShowFPS bool
 }
 
-func New() (*Screen, error) {
+type Screen struct {
+	screen       tcell.Screen
+	style        tcell.Style
+	quit         chan struct{}
+	screenOption *ScreenOption
+}
+
+func New(so *ScreenOption) (*Screen, error) {
 	s, err := tcell.NewScreen()
 	if err != nil {
 		return nil, err
@@ -24,10 +30,12 @@ func New() (*Screen, error) {
 	if err := s.Init(); err != nil {
 		return nil, err
 	}
+
 	return &Screen{
-		screen: s,
-		style:  tcell.StyleDefault.Foreground(tcell.ColorDefault),
-		quit:   make(chan struct{}),
+		screen:       s,
+		style:        tcell.StyleDefault.Foreground(tcell.ColorDefault),
+		quit:         make(chan struct{}),
+		screenOption: so,
 	}, nil
 }
 
@@ -51,7 +59,7 @@ func (s *Screen) keyEvents(events func(ev *tcell.EventKey)) {
 }
 
 func (s *Screen) refreshScreen(update func(delta float64), render func()) {
-	ticker := time.NewTicker(time.Second / 29) // 30 fps
+	ticker := time.NewTicker(s.screenOption.Ticker) // 30 fps
 	defer ticker.Stop()
 	last := time.Now()
 	for {
@@ -66,9 +74,11 @@ func (s *Screen) refreshScreen(update func(delta float64), render func()) {
 			s.screen.Clear() // clear screen
 			render()         // render screen
 
-			fpsStr := fmt.Sprintf("FPS: %.1f", 1/elapsed)
-			for i, r := range fpsStr {
-				s.SetContent(i, 0, r)
+			if s.screenOption.ShowFPS {
+				fpsStr := fmt.Sprintf("FPS: %.1f", 1/elapsed)
+				for i, r := range fpsStr {
+					s.SetContent(i, 0, r)
+				}
 			}
 
 			s.screen.Show() // show what has been rendered on screen

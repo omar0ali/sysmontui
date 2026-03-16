@@ -1,13 +1,18 @@
 package main
 
 import (
+	"time"
+
 	"github.com/gdamore/tcell/v3"
 	"github.com/omar0ali/sysmontui/screentui"
 )
 
 func main() {
+	s, err := screentui.New(&screentui.ScreenOption{
+		Ticker:  time.Second,
+		ShowFPS: true,
+	})
 
-	s, err := screen.New()
 	if err != nil {
 		panic(err)
 	}
