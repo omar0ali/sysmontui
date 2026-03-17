@@ -5,23 +5,22 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 )
-
-var style tcell.Style
 
 type ScreenOption struct {
 	Ticker  time.Duration
 	ShowFPS bool
 }
 
-type Screen struct {
+type screen struct {
 	screen       tcell.Screen
 	style        tcell.Style
 	quit         chan struct{}
 	screenOption *ScreenOption
 }
 
-func New(so *ScreenOption) (*Screen, error) {
+func New(so *ScreenOption) (*screen, error) {
 	s, err := tcell.NewScreen()
 	if err != nil {
 		return nil, err
@@ -31,7 +30,7 @@ func New(so *ScreenOption) (*Screen, error) {
 		return nil, err
 	}
 
-	return &Screen{
+	return &screen{
 		screen:       s,
 		style:        tcell.StyleDefault.Foreground(tcell.ColorDefault),
 		quit:         make(chan struct{}),
@@ -39,7 +38,7 @@ func New(so *ScreenOption) (*Screen, error) {
 	}, nil
 }
 
-func (s *Screen) keyEvents(events func(ev *tcell.EventKey)) {
+func (s *screen) keyEvents(events func(ev *tcell.EventKey)) {
 	for {
 		ev := <-s.screen.EventQ()
 		switch ev := ev.(type) {
@@ -58,7 +57,7 @@ func (s *Screen) keyEvents(events func(ev *tcell.EventKey)) {
 	}
 }
 
-func (s *Screen) refreshScreen(update func(delta float64), render func()) {
+func (s *screen) refreshScreen(update func(delta float64), render func()) {
 	ticker := time.NewTicker(s.screenOption.Ticker) // 30 fps
 	defer ticker.Stop()
 	last := time.Now()
@@ -89,7 +88,7 @@ func (s *Screen) refreshScreen(update func(delta float64), render func()) {
 
 }
 
-func (s *Screen) Run(
+func (s *screen) Run(
 	update func(elapsed float64),
 	render func(),
 	events func(ev *tcell.EventKey),
@@ -98,18 +97,25 @@ func (s *Screen) Run(
 	s.refreshScreen(update, render) // show screen and refresh
 }
 
-func (s *Screen) Color(styleColor tcell.Color) {
-	style = tcell.StyleDefault.Foreground(styleColor)
+type ScreenControl interface {
+	Color(color.Color)
+	SetContent(x, y int, r rune)
+	Size() (int, int)
+	Exit()
 }
 
-func (s *Screen) SetContent(x, y int, r rune) {
+func (s *screen) Color(styleColor color.Color) {
+	s.style = tcell.StyleDefault.Foreground(styleColor).Background(tcell.ColorReset)
+}
+
+func (s *screen) SetContent(x, y int, r rune) {
 	s.screen.SetContent(x, y, r, nil, s.style)
 }
 
-func (s *Screen) Size() (width int, height int) {
+func (s *screen) Size() (width int, height int) {
 	return s.screen.Size()
 }
-func (s *Screen) Exit() {
+func (s *screen) Exit() {
 	s.screen.Fini()
 	close(s.quit)
 }
