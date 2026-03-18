@@ -6,6 +6,7 @@ import (
 
 type Entity struct {
 	entities     map[string][]interfaces.EntityActions
+	permEntities []interfaces.EntityActions
 	currentScene string
 }
 
@@ -13,7 +14,8 @@ type Entity struct {
 
 func Init() *Entity {
 	return &Entity{
-		entities: map[string][]interfaces.EntityActions{},
+		entities:     map[string][]interfaces.EntityActions{},
+		permEntities: []interfaces.EntityActions{},
 	}
 }
 
@@ -29,14 +31,23 @@ func (e *Entity) GetEntities(scene string) []interfaces.EntityActions {
 	return e.entities[scene]
 }
 
-func (e *Entity) AddEntity(scene string, entity interfaces.EntityActions) {
-	if e.entities == nil {
-		e.entities = map[string][]interfaces.EntityActions{}
-	}
-	e.entities[scene] = append(e.entities[scene], entity)
+func (e *Entity) GetPermEntities() []interfaces.EntityActions {
+	return e.permEntities
+}
+
+func (e *Entity) AddPermEntity(entity ...interfaces.EntityActions) {
+	e.permEntities = append(e.permEntities, entity...)
+}
+
+func (e *Entity) AddEntity(scene string, entity ...interfaces.EntityActions) {
+	e.entities[scene] = append(e.entities[scene], entity...)
 	e.currentScene = scene // should also set the last scene as default
 }
 
 func (e *Entity) ClearEntities(scene string) {
 	clear(e.entities[scene])
+}
+
+func (e *Entity) ClearPermEntities() {
+	e.permEntities = e.permEntities[:0]
 }

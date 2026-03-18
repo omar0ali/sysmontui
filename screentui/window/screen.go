@@ -99,9 +99,15 @@ func (s *screen) Run(entity *entity.Entity) {
 		for _, j := range entity.GetEntities(entity.GetScene()) {
 			j.Update(delta)
 		}
+		for _, j := range entity.GetPermEntities() {
+			j.Update(delta)
+		}
 	}, func() {
 		// render
 		for _, j := range entity.GetEntities(entity.GetScene()) {
+			j.Render(s)
+		}
+		for _, j := range entity.GetPermEntities() {
 			j.Render(s)
 		}
 	}, func(e *tcell.EventKey) {
@@ -113,7 +119,9 @@ func (s *screen) Run(entity *entity.Entity) {
 		for _, j := range entity.GetEntities(entity.GetScene()) {
 			j.Events(e)
 		}
-
+		for _, j := range entity.GetPermEntities() {
+			j.Events(e)
+		}
 	})
 }
 
