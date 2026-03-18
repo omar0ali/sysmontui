@@ -1,4 +1,4 @@
-package screentui
+package window
 
 import (
 	"fmt"
@@ -6,12 +6,8 @@ import (
 
 	"github.com/gdamore/tcell/v3"
 	"github.com/gdamore/tcell/v3/color"
+	"github.com/omar0ali/sysmontui/screentui/entity"
 )
-
-type ScreenOption struct {
-	Ticker  time.Duration
-	ShowFPS bool
-}
 
 type screen struct {
 	screen       tcell.Screen
@@ -88,7 +84,7 @@ func (s *screen) refreshScreen(update func(delta float64), render func()) {
 
 }
 
-func (s *screen) Run(
+func (s *screen) run(
 	update func(elapsed float64),
 	render func(),
 	events func(ev *tcell.EventKey),
@@ -97,11 +93,28 @@ func (s *screen) Run(
 	s.refreshScreen(update, render) // show screen and refresh
 }
 
-type ScreenControl interface {
-	Color(color.Color)
-	SetContent(x, y int, r rune)
-	Size() (int, int)
-	Exit()
+func (s *screen) Run(entity *entity.Entity) {
+	s.run(func(delta float64) {
+		// update
+		for _, j := range entity.GetEntities(entity.GetScene()) {
+			j.Update(delta)
+		}
+	}, func() {
+		// render
+		for _, j := range entity.GetEntities(entity.GetScene()) {
+			j.Render(s)
+		}
+	}, func(e *tcell.EventKey) {
+		// current
+		if e.Key() == tcell.KeyCtrlQ {
+			s.Exit()
+		}
+		// from entities
+		for _, j := range entity.GetEntities(entity.GetScene()) {
+			j.Events(e)
+		}
+
+	})
 }
 
 func (s *screen) Color(styleColor color.Color) {

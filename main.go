@@ -3,13 +3,14 @@ package main
 import (
 	"time"
 
-	"github.com/gdamore/tcell/v3"
 	"github.com/omar0ali/sysmontui/scenes/cpuinfo"
-	"github.com/omar0ali/sysmontui/screentui"
+	"github.com/omar0ali/sysmontui/screentui/entity"
+	"github.com/omar0ali/sysmontui/screentui/window"
 )
 
 func main() {
-	s, err := screentui.New(&screentui.ScreenOption{
+	// setup
+	s, err := window.New(&window.ScreenOption{
 		Ticker: time.Second / 5,
 	})
 
@@ -17,35 +18,18 @@ func main() {
 		panic(err)
 	}
 
-	// setup
+	entity := entity.Init() // create a new entity (where a collection of entities are collected)
 
-	screentui.AddEntity("cpuinfo", cpuinfo.Init())
+	// add entities you want to display (each scene will have their own list of entities)
+	// each entity must contain (Init, Update, Render, Events) functions / actions
 
-	// set scene
+	entity.AddEntity("cpuinfo", cpuinfo.Init()) // each entity must have init
 
-	screentui.CurrentScene = "cpuinfo"
+	// set scene (optional) Always last entity added will be set as the current scene.
+
+	entity.SetScene("cpuinfo") // set current scene to be displayed / rendered
 
 	// run
 
-	s.Run(func(delta float64) {
-		// update
-		for _, j := range screentui.GetEntities(screentui.CurrentScene) {
-			j.Update(delta)
-		}
-	}, func() {
-		// render
-		for _, j := range screentui.GetEntities(screentui.CurrentScene) {
-			j.Render(s)
-		}
-	}, func(e *tcell.EventKey) {
-		// current
-		if e.Key() == tcell.KeyCtrlQ {
-			s.Exit()
-		}
-		// from entities
-		for _, j := range screentui.GetEntities(screentui.CurrentScene) {
-			j.Events(e)
-		}
-
-	})
+	s.Run(entity)
 }

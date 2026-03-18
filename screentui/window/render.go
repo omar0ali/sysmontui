@@ -1,12 +1,17 @@
-package screentui
+package window
 
-func Text(s ScreenControl, p Point, txt string) {
+import (
+	"github.com/omar0ali/sysmontui/screentui"
+	"github.com/omar0ali/sysmontui/screentui/interfaces"
+)
+
+func Text(s interfaces.ScreenControl, p screentui.Point, txt string) {
 	for i, char := range txt {
 		s.SetContent(int(p.X)+i, int(p.Y), char)
 	}
 }
 
-func TextWrap(s ScreenControl, p Point, width int, txt string) {
+func TextWrap(s interfaces.ScreenControl, p screentui.Point, width int, txt string) {
 	x, y := int(p.X), int(p.Y)
 	line := ""
 	for _, char := range txt {
@@ -25,7 +30,7 @@ func TextWrap(s ScreenControl, p Point, width int, txt string) {
 	}
 }
 
-func TextCenter(s ScreenControl, p Point, txt string) {
+func TextCenter(s interfaces.ScreenControl, p screentui.Point, txt string) {
 	width, _ := s.Size()
 	startX := int(p.X) + (width-len(txt))/2
 	for i, char := range txt {
@@ -33,7 +38,7 @@ func TextCenter(s ScreenControl, p Point, txt string) {
 	}
 }
 
-func TextBoxCenter(s ScreenControl, topLeft Point, boxWidth, boxHeight int, txt string) {
+func TextBoxCenter(s interfaces.ScreenControl, topLeft screentui.Point, boxWidth, boxHeight int, txt string) {
 	lines := []string{}
 	line := ""
 	for _, c := range txt {
@@ -56,7 +61,7 @@ func TextBoxCenter(s ScreenControl, topLeft Point, boxWidth, boxHeight int, txt 
 	}
 }
 
-func TextScreenCenter(s ScreenControl, txt string) {
+func TextScreenCenter(s interfaces.ScreenControl, txt string) {
 	screenWidth, screenHeight := s.Size()
 	x := (screenWidth - len(txt)) / 2
 	y := screenHeight / 2
@@ -65,7 +70,7 @@ func TextScreenCenter(s ScreenControl, txt string) {
 	}
 }
 
-func DrawBox(s ScreenControl, p Point, width, height int) {
+func DrawBox(s interfaces.ScreenControl, p screentui.Point, width, height int) {
 	x := int(p.X)
 	y := int(p.Y)
 	// Draw corners
