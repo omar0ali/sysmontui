@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"github.com/omar0ali/sysmontui/scenes/perm/controls"
 	"github.com/omar0ali/sysmontui/scenes/perm/cpuinfo"
 	"github.com/omar0ali/sysmontui/screentui/entity"
 	"github.com/omar0ali/sysmontui/screentui/window"
@@ -23,7 +24,10 @@ func main() {
 	// add entities you want to display (each scene will have their own list of entities)
 	// each entity must contain (Init, Update, Render, Events) functions / actions
 
-	entity.AddPermEntity(cpuinfo.Init()) // each entity must have init
+	entity.AddPermEntity(
+		cpuinfo.Init(),
+		controls.Init(),
+	) // each entity must have init
 
 	// set scene (optional) Always last entity added will be set as the current scene.
 
