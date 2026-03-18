@@ -12,3 +12,9 @@ type Point struct {
 func P(X, Y float64) Point {
 	return Point{X, Y}
 }
+
+func (mP *Point) AddPaddingTo(cP Point) Point {
+	mP.X += cP.X
+	mP.Y += cP.Y
+	return *mP
+}
