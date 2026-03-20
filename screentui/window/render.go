@@ -5,6 +5,12 @@ import (
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
 )
 
+func LineHorizontal(s interfaces.ScreenControl, length, yPos int, char rune) {
+	for i := range length {
+		s.SetContent(i, yPos, char)
+	}
+}
+
 func Text(s interfaces.ScreenControl, p screentui.Point, txt string) {
 	for i, char := range txt {
 		s.SetContent(int(p.X)+i, int(p.Y), char)

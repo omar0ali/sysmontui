@@ -25,8 +25,8 @@ func main() {
 	// each entity must contain (Init, Update, Render, Events) functions / actions
 
 	entity.AddPermEntity(
-		cpuinfo.Init(),
 		controls.Init(),
+		cpuinfo.Init(),
 	) // each entity must have init
 
 	// set scene (optional) Always last entity added will be set as the current scene.

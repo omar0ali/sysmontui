@@ -5,7 +5,9 @@ import (
 
 	"github.com/gdamore/tcell/v3"
 	"github.com/omar0ali/sysmon/sysmon"
+	"github.com/omar0ali/sysmontui/screentui"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
+	"github.com/omar0ali/sysmontui/screentui/window"
 )
 
 type CpuInfo struct {
@@ -26,9 +28,8 @@ func (c *CpuInfo) Update(d float64) {}
 
 func (c *CpuInfo) Render(s interfaces.ScreenControl) {
 	w, h := s.Size()
-	for i := range w {
-		s.SetContent(i, h-3, tcell.RuneHLine)
-	}
+	window.LineHorizontal(s, w, h-5, tcell.RuneHLine)
+
 	details := []string{
 		c.cpuinfo.ModelName,
 		fmt.Sprintf("Logical CPUs: %d", c.cpuinfo.LogicalCPUs),
@@ -39,10 +40,8 @@ func (c *CpuInfo) Render(s interfaces.ScreenControl) {
 
 	start := spaceInBetween
 	for _, text := range details {
-		center := len(text) / 2 // center the text
-		for i, char := range text {
-			s.SetContent(start+i-center, h-2, char)
-		}
+		centerOfText := len(text) / 2 // center the text
+		window.Text(s, screentui.P(float64(start-centerOfText), float64(h-4)), text)
 		start += spaceInBetween
 	}
 }
