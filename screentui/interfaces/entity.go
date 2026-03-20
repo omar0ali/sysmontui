@@ -9,3 +9,8 @@ type EntityActions interface {
 	Render(ScreenControl)
 	Events(ev *tcell.EventKey)
 }
+
+type SceneControl interface {
+	GetScene() string
+	SetScene(s string)
+}

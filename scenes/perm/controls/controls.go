@@ -10,20 +10,22 @@ import (
 type Controls struct {
 	defaultListLimit int
 	listOfControls   []string
+	sceneControl     interfaces.SceneControl
 }
 
-func Init() *Controls {
+func Init(s interfaces.SceneControl) *Controls {
 	listOfControls := []string{
-		"Controls: ",
 		"[ESC] Exit",
-		"[1] CPU Info",
-		"[2] Memory Info",
-		"|",
+		"[0] Home",
+		"[1] Memory Info",
+		"[2] CPU Info",
+		"[3] Processors",
 	}
 
 	return &Controls{
 		listOfControls:   listOfControls,
 		defaultListLimit: len(listOfControls),
+		sceneControl:     s,
 	}
 }
 
@@ -40,33 +42,35 @@ func (c *Controls) MenuResetList() {
 func (c *Controls) Update(d float64) {}
 func (c *Controls) Render(s interfaces.ScreenControl) {
 	w, h := s.Size()
-	window.LineHorizontal(s, w, h-3, tcell.RuneHLine)
+	window.LineHorizontal(s, w, 3, tcell.RuneHLine)  // for ui
+	window.LineVertical(s, h-3, 30, tcell.RuneVLine) // for ui
 
-	spaceInBetween := w / (len(c.listOfControls) + 1)
-	start := spaceInBetween
-	for _, text := range c.listOfControls {
-		centerOfText := len(text) / 2 // center the text
-		window.Text(s, screentui.P(float64(start-centerOfText), float64(h-2)), text)
-		start += spaceInBetween
+	start := 4
+	for y, text := range c.listOfControls {
+		window.Text(s, screentui.P(2, float64(start+y)), text)
 	}
 }
 
 func (c *Controls) Events(ev *tcell.EventKey) {
 	s := ev.Str()
-	if len(s) == 1 && s[0] >= '1' && s[0] <= '3' {
+	if len(s) == 1 && s[0] >= '0' && s[0] <= '4' {
 		c.MenuResetList()
 
 		page := int(s[0] - '0')
 		switch page {
+		case 0:
+			c.sceneControl.SetScene("0")
 		case 1:
-			c.MenuAddToList("[R] Remove")
-			c.MenuAddToList("[J] Jump")
+			c.MenuAddToList("-------------------")
+			c.MenuAddToList("[U] Update")
+			c.MenuAddToList("[T] Toggle (MB, GB)")
+			c.sceneControl.SetScene("1")
 			// page 1
 		case 2:
-			c.MenuAddToList("Test 1")
-			c.MenuAddToList("Test")
+			c.sceneControl.SetScene("2")
 			// page 2
 		case 3:
+			c.sceneControl.SetScene("3")
 			// page 3
 		}
 	}

@@ -11,6 +11,21 @@ func LineHorizontal(s interfaces.ScreenControl, length, yPos int, char rune) {
 	}
 }
 
+func LineVertical(s interfaces.ScreenControl, length, xPos int, char rune) {
+	for i := range length {
+		s.SetContent(xPos, i, char)
+	}
+}
+
+// one line with space in between each text
+func ListOfTextsWithPadding(s interfaces.ScreenControl, p screentui.Point, padding int, txts []string) {
+	startX := int(p.X)
+	for _, text := range txts {
+		Text(s, screentui.P(float64(startX), p.Y), text)
+		startX += padding
+	}
+}
+
 func Text(s interfaces.ScreenControl, p screentui.Point, txt string) {
 	for i, char := range txt {
 		s.SetContent(int(p.X)+i, int(p.Y), char)
