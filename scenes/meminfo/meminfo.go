@@ -1,10 +1,17 @@
 package meminfo
 
 import (
+	"context"
 	"fmt"
+	"sync"
+
+	"time"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 	"github.com/omar0ali/sysmon/pkg"
+	"github.com/omar0ali/sysmontui/scenes/options"
+	"github.com/omar0ali/sysmontui/scenes/perm/controls"
 	"github.com/omar0ali/sysmontui/screentui"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
 	"github.com/omar0ali/sysmontui/screentui/window"
@@ -12,26 +19,53 @@ import (
 
 type MemInfo struct {
 	meminfo       *pkg.MemInfo
+	mu            sync.RWMutex
 	unit          pkg.Unit
 	unitStr       string
-	LogsAddToList func(string)
+	LogsAddToList controls.LogsAddToList
 }
 
-func Init(lgs func(string)) *MemInfo {
-	meminfo, err := pkg.ReadMemInfo(pkg.MB)
-	if err != nil {
-		panic(err)
-	}
-	return &MemInfo{
-		meminfo:       meminfo,
+func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Options) *MemInfo {
+	meminfo := &MemInfo{
 		unit:          pkg.MB,
 		unitStr:       "MB",
-		LogsAddToList: lgs,
+		LogsAddToList: logsFunc,
 	}
+
+	// important to init info to avoid nil
+	if info, err := pkg.ReadMemInfo(meminfo.unit); err == nil {
+		meminfo.mu.Lock()
+		meminfo.meminfo = info
+		meminfo.mu.Unlock()
+	}
+
+	go func(ctx context.Context, mi *MemInfo, op options.Options) {
+		ticker := time.NewTicker(time.Second * time.Duration(op.Interval))
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				memInfo, err := pkg.ReadMemInfo(mi.unit)
+				if err != nil {
+					panic(err)
+				}
+
+				mi.mu.Lock()
+				mi.meminfo = memInfo
+				mi.mu.Unlock()
+			}
+		}
+	}(ctx, meminfo, op)
+
+	return meminfo
 }
 
 func (m *MemInfo) Update(d float64) {}
 func (m *MemInfo) Render(s interfaces.ScreenControl) {
+	s.Color(color.White)
 	window.Text(s, screentui.P(1, 1), "Page: Memory Info") // title
 
 	// start writing the text line by line
@@ -85,16 +119,6 @@ func (m *MemInfo) Events(ev *tcell.EventKey) {
 			m.unit = pkg.MB
 			m.unitStr = "MB"
 			m.LogsAddToList("Toggle to MB")
-		}
-	}
-	if ev.Str() == "U" || ev.Str() == "T" { // update current stats
-		meminfo, err := pkg.ReadMemInfo(m.unit)
-		if err != nil {
-			panic(err)
-		}
-		m.meminfo = meminfo
-		if ev.Str() == "U" && ev.Str() != "T" {
-			m.LogsAddToList("Update (read meminfo)")
 		}
 	}
 }
