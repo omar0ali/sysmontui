@@ -21,22 +21,26 @@ func main() {
 		panic(err)
 	}
 
-	entity := entity.Init() // create a new entity (where a collection of entities are collected)
+	entities := entity.Init() // create a new entity (where a collection of entities are collected)
 
-	// add entities you want to display (each scene will have their own list of entities)
+	// add entities to display (each scene will have their own list of entities)
 	// each entity must contain (Init, Update, Render, Events) functions / actions
 
-	entity.AddPermEntity(
-		controls.Init(entity),
+	// permanent entities (always shown on all scenes)
+	entities.AddPermEntity(
+		controls.Init(entities),
 		cpuinfo.Init(),
-	) // each entity must have init
+	)
 
-	entity.AddEntity("0", home.Init())    // non perm scene
-	entity.AddEntity("1", meminfo.Init()) // non perm scene
+	// logs func can be used anywhere, when its required
+	logsFunc := entity.GetAllEntitiesByType[*controls.Controls](
+		entities.GetPermEntities(),
+	)[0].LogsAddToList
 
-	// set scene (optional) Always last entity added will be set as the current scene.
+	entities.AddEntity("0", home.Init())            // non perm scene
+	entities.AddEntity("1", meminfo.Init(logsFunc)) // non perm scene
 
-	entity.SetScene("0") // set current scene to be displayed / rendered
+	entities.SetScene("0") // set current scene to be displayed / rendered
 
-	s.Run(entity) // run
+	s.Run(entities) // run
 }

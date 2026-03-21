@@ -11,6 +11,13 @@ func LineHorizontal(s interfaces.ScreenControl, length, yPos int, char rune) {
 	}
 }
 
+func LineHorizontalWithStartAndEnd(s interfaces.ScreenControl, startX, endX, y int, char rune) {
+	length := endX - startX
+	for i := range length {
+		s.SetContent(i+startX, y, char)
+	}
+}
+
 func LineVertical(s interfaces.ScreenControl, length, xPos int, char rune) {
 	for i := range length {
 		s.SetContent(xPos, i, char)

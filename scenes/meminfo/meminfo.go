@@ -11,20 +11,22 @@ import (
 )
 
 type MemInfo struct {
-	meminfo *pkg.MemInfo
-	unit    pkg.Unit
-	unitStr string
+	meminfo       *pkg.MemInfo
+	unit          pkg.Unit
+	unitStr       string
+	LogsAddToList func(string)
 }
 
-func Init() *MemInfo {
+func Init(lgs func(string)) *MemInfo {
 	meminfo, err := pkg.ReadMemInfo(pkg.MB)
 	if err != nil {
 		panic(err)
 	}
 	return &MemInfo{
-		meminfo: meminfo,
-		unit:    pkg.MB,
-		unitStr: "MB",
+		meminfo:       meminfo,
+		unit:          pkg.MB,
+		unitStr:       "MB",
+		LogsAddToList: lgs,
 	}
 }
 
@@ -78,9 +80,11 @@ func (m *MemInfo) Events(ev *tcell.EventKey) {
 		if m.unit == pkg.MB {
 			m.unit = pkg.GB
 			m.unitStr = "GB"
+			m.LogsAddToList("Toggle to GB")
 		} else {
 			m.unit = pkg.MB
 			m.unitStr = "MB"
+			m.LogsAddToList("Toggle to MB")
 		}
 	}
 	if ev.Str() == "U" || ev.Str() == "T" { // update current stats
@@ -89,5 +93,8 @@ func (m *MemInfo) Events(ev *tcell.EventKey) {
 			panic(err)
 		}
 		m.meminfo = meminfo
+		if ev.Str() == "U" && ev.Str() != "T" {
+			m.LogsAddToList("Update (read meminfo)")
+		}
 	}
 }

@@ -31,6 +31,16 @@ func (e *Entity) GetEntities(scene string) []interfaces.EntityActions {
 	return e.entities[scene]
 }
 
+func GetAllEntitiesByType[T any](entities []interfaces.EntityActions) []T {
+	var result []T
+	for _, v := range entities {
+		if val, ok := v.(T); ok {
+			result = append(result, val)
+		}
+	}
+	return result
+}
+
 func (e *Entity) GetPermEntities() []interfaces.EntityActions {
 	return e.permEntities
 }
