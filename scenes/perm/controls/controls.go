@@ -1,6 +1,8 @@
 package controls
 
 import (
+	"fmt"
+
 	"github.com/gdamore/tcell/v3"
 	"github.com/gdamore/tcell/v3/color"
 	"github.com/omar0ali/sysmontui/screentui"
@@ -19,18 +21,21 @@ type Controls struct {
 
 func Init(s interfaces.SceneControl) *Controls {
 	listOfControls := []string{
-		"[ESC] Exit",
 		"[0] Home",
 		"[1] Memory Info",
 		"[2] CPU Status",
-		"[3] Processors",
+		"[3] Running Processes",
+		"[ESC] Exit",
 	}
-
-	return &Controls{
+	controls := &Controls{
 		listOfControls:   listOfControls,
 		defaultListLimit: len(listOfControls),
 		sceneControl:     s,
 	}
+
+	controls.LogsAddToList("Home Page")
+
+	return controls
 }
 
 func (c *Controls) LogsAddToList(s string) {
@@ -59,17 +64,23 @@ func (c *Controls) Render(s interfaces.ScreenControl) {
 	// left side vertical line
 	window.LineVertical(s, h-3, 30, tcell.RuneVLine) // for ui
 
+	s.Color(color.White)
+
 	// list of controls options
 	startY := 4
 	for y, text := range c.listOfControls {
+		s.Color(color.White)
+		if c.sceneControl.GetScene() == fmt.Sprintf("%d", y) {
+			s.Color(color.YellowGreen)
+			window.Text(s, screentui.P(2, float64(startY+y)), text)
+			continue
+		}
 		window.Text(s, screentui.P(2, float64(startY+y)), text)
 	}
 
 	// footer line for logs
 	window.Text(s, screentui.P(33, float64(h)-14), "-- Logs --")
 	window.LineHorizontalWithStartAndEnd(s, 31, w, h-13, tcell.RuneHLine) // for ui
-
-	s.Color(color.White)
 
 	startY = h - 12
 	for y, text := range c.listOfLogs {
