@@ -15,10 +15,13 @@
 - [ ] Showing list of processes
 
 ### Requirements
-Linux
+Linux only (uses /proc)
 
 ### Screenshots
 #### CPU Status
 ![Sysmontui screenshot cpustatus](assets/screenshots/cpustatus.png)
 #### Memory Info
 ![Sysmontui screenshot meminfo](assets/screenshots/meminfo.png)
+
+### Status
+Work in progress
