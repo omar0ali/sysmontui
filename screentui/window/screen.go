@@ -1,6 +1,7 @@
 package window
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -37,15 +38,9 @@ func New(so *ScreenOption) (*screen, error) {
 func (s *screen) keyEvents(events func(ev *tcell.EventKey)) {
 	for {
 		ev := <-s.screen.EventQ()
-		switch ev := ev.(type) {
+		switch ev.(type) {
 		case *tcell.EventResize:
 			s.screen.Sync()
-		case *tcell.EventKey:
-
-			switch ev.Key() {
-			case tcell.KeyEscape:
-				s.Exit()
-			}
 		}
 		if ev, ok := ev.(*tcell.EventKey); ok {
 			events(ev)
@@ -93,7 +88,7 @@ func (s *screen) run(
 	s.refreshScreen(update, render) // show screen and refresh
 }
 
-func (s *screen) Run(entity *entity.Entity) {
+func (s *screen) Run(entity *entity.Entity, whenExit context.CancelFunc) {
 	s.run(func(delta float64) {
 		// update
 		for _, j := range entity.GetEntities(entity.GetScene()) {
@@ -112,9 +107,10 @@ func (s *screen) Run(entity *entity.Entity) {
 		}
 	}, func(e *tcell.EventKey) {
 		// current
-		if e.Key() == tcell.KeyCtrlQ {
+		if e.Key() == tcell.KeyCtrlQ || e.Key() == tcell.KeyESC {
 			s.Exit()
 		}
+
 		// from entities
 		for _, j := range entity.GetEntities(entity.GetScene()) {
 			j.Events(e)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 	"github.com/omar0ali/sysmon/pkg"
 	"github.com/omar0ali/sysmontui/screentui"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
@@ -27,6 +28,7 @@ func Init() *CpuInfo {
 func (c *CpuInfo) Update(d float64) {}
 
 func (c *CpuInfo) Render(s interfaces.ScreenControl) {
+	s.Color(color.White)
 	w, h := s.Size()
 	window.LineHorizontal(s, w, h-3, tcell.RuneHLine)
 

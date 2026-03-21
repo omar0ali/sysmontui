@@ -2,10 +2,13 @@ package controls
 
 import (
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
 	"github.com/omar0ali/sysmontui/screentui"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
 	"github.com/omar0ali/sysmontui/screentui/window"
 )
+
+type LogsAddToList func(string)
 
 type Controls struct {
 	defaultListLimit int
@@ -19,7 +22,7 @@ func Init(s interfaces.SceneControl) *Controls {
 		"[ESC] Exit",
 		"[0] Home",
 		"[1] Memory Info",
-		"[2] CPU Info",
+		"[2] CPU Status",
 		"[3] Processors",
 	}
 
@@ -31,9 +34,10 @@ func Init(s interfaces.SceneControl) *Controls {
 }
 
 func (c *Controls) LogsAddToList(s string) {
+	limit := 9
 	c.listOfLogs = append([]string{s}, c.listOfLogs...)
-	if len(c.listOfLogs) > 4 {
-		c.listOfLogs = c.listOfLogs[:4]
+	if len(c.listOfLogs) > limit {
+		c.listOfLogs = c.listOfLogs[:limit]
 	}
 }
 func (c *Controls) MenuAddToList(s string) {
@@ -48,6 +52,7 @@ func (c *Controls) MenuResetList() {
 
 func (c *Controls) Update(d float64) {}
 func (c *Controls) Render(s interfaces.ScreenControl) {
+	s.Color(color.YellowGreen)
 	w, h := s.Size()
 	// horizontal line for the title
 	window.LineHorizontal(s, w, 3, tcell.RuneHLine) // for ui
@@ -63,6 +68,9 @@ func (c *Controls) Render(s interfaces.ScreenControl) {
 	// footer line for logs
 	window.Text(s, screentui.P(33, float64(h)-14), "-- Logs --")
 	window.LineHorizontalWithStartAndEnd(s, 31, w, h-13, tcell.RuneHLine) // for ui
+
+	s.Color(color.White)
+
 	startY = h - 12
 	for y, text := range c.listOfLogs {
 		window.Text(s, screentui.P(34, float64(startY+y)), text)
@@ -83,15 +91,14 @@ func (c *Controls) Events(ev *tcell.EventKey) {
 			c.LogsAddToList("Home Page")
 		case 1:
 			c.MenuAddToList("-------------------")
-			c.MenuAddToList("[U] Update")
 			c.MenuAddToList("[T] Toggle (MB, GB)")
 			c.sceneControl.SetScene("1")
 			c.LogsAddToList("Memory Page")
 			// page 1
 		case 2:
 			c.sceneControl.SetScene("2")
-			c.LogsAddToList("2")
 			// page 2
+			c.LogsAddToList("CPU Status Page")
 		case 3:
 			c.sceneControl.SetScene("3")
 			c.LogsAddToList("3")
