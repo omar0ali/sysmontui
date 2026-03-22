@@ -46,6 +46,8 @@ func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Optio
 		scrollWindow:  scrollWindow{},
 	}
 
+	processes.LogsAddToList("Reading processes...")
+
 	go func(ctx context.Context, processes *Processes, op options.Options) {
 		ticker := time.NewTicker(time.Second * time.Duration(op.Interval))
 		defer ticker.Stop()
@@ -217,13 +219,11 @@ func (p *Processes) Events(ev tcell.Event) {
 				p.scrollWindow.start++
 				p.scrollWindow.end++
 			}
-			p.LogsAddToList("Scrolling down\t[j]")
 		} else if ev.Str() == "k" {
 			if p.scrollWindow.start > 0 {
 				p.scrollWindow.start--
 				p.scrollWindow.end--
 			}
-			p.LogsAddToList("Scrolling up\t[k]")
 		}
 	}
 }

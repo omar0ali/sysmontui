@@ -20,11 +20,16 @@ type CpuStat struct {
 	mu       sync.RWMutex
 	cpuUsage []float64
 	avg      float64
+	logsFunc controls.LogsAddToList
 }
 
 func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Options) *CpuStat {
 
-	cpustats := &CpuStat{}
+	cpustats := &CpuStat{
+		logsFunc: logsFunc,
+	}
+
+	cpustats.logsFunc("Reading cpu stats...")
 
 	go func(ctx context.Context, cs *CpuStat, op options.Options) {
 		prev, _ := pkg.ReadCpuStat()

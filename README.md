@@ -35,6 +35,9 @@ Linux only (uses /proc)
 git clone https://github.com/omar0ali/sysmontui.git
 cd sysmontui
 go build -o build/sysmontui cmd/sysmontui/main.go
+
+#Run
+./build/sysmontui
 ```
 
 ### Using Go (recommended) - Linux only

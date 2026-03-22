@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"runtime"
 	"time"
 
 	"github.com/omar0ali/sysmontui/scenes/cpustat"
@@ -23,6 +24,11 @@ func main() {
 
 	if err != nil {
 		panic(err)
+	}
+
+	// check if running linux
+	if runtime.GOOS != "linux" {
+		panic("Not running on linux")
 	}
 
 	entities := entity.Init() // create a new entity (where a collection of entities are collected)

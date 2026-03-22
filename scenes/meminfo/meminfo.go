@@ -32,6 +32,8 @@ func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Optio
 		LogsAddToList: logsFunc,
 	}
 
+	meminfo.LogsAddToList("Read memory info...")
+
 	// important to init info to avoid nil
 	if info, err := pkg.ReadMemInfo(meminfo.unit); err == nil {
 		meminfo.mu.Lock()

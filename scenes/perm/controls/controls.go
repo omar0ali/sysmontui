@@ -95,7 +95,7 @@ func (c *Controls) Events(ev tcell.Event) {
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
 		s := ev.Str()
-		if len(s) == 1 && s[0] >= '0' && s[0] <= '4' {
+		if len(s) == 1 && s[0] >= '0' && s[0] <= '3' {
 			c.MenuResetList()
 
 			page := int(s[0] - '0')
