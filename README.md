@@ -13,6 +13,8 @@
 - [x] CPU Status Info Page
 - [x] Memory Info Page
 - [x] Showing list of processes
+- [ ] Support sorting processes by different fields (name, PID, etc.)
+- [ ] Search processes
 - [ ] UI Polishing & Clean up
 
 ### Requirements
