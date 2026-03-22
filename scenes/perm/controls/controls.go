@@ -105,15 +105,15 @@ func (c *Controls) Events(ev *tcell.EventKey) {
 			c.MenuAddToList("[T] Toggle (MB, GB)")
 			c.sceneControl.SetScene("1")
 			c.LogsAddToList("Memory Page")
-			// page 1
 		case 2:
 			c.sceneControl.SetScene("2")
-			// page 2
 			c.LogsAddToList("CPU Status Page")
 		case 3:
 			c.sceneControl.SetScene("3")
-			c.LogsAddToList("3")
-			// page 3
+			c.LogsAddToList("Running Processes Page")
+			c.MenuAddToList("-------------------")
+			c.MenuAddToList("[j] Scroll Up")
+			c.MenuAddToList("[k] Scroll Down")
 		}
 	}
 }

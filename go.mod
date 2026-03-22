@@ -4,7 +4,7 @@ go 1.25.3
 
 require (
 	github.com/gdamore/tcell/v3 v3.1.2
-	github.com/omar0ali/sysmon v0.1.1
+	github.com/omar0ali/sysmon v0.1.2
 )
 
 require (

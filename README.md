@@ -12,7 +12,8 @@
 - [x] Home Page
 - [x] CPU Status Info Page
 - [x] Memory Info Page
-- [ ] Showing list of processes
+- [x] Showing list of processes
+- [ ] UI Polishing & Clean up
 
 ### Requirements
 Linux only (uses /proc)
@@ -22,6 +23,9 @@ Linux only (uses /proc)
 ![Sysmontui screenshot cpustatus](assets/screenshots/cpustatus.png)
 #### Memory Info
 ![Sysmontui screenshot meminfo](assets/screenshots/meminfo.png)
+#### Running Processes
+![Sysmontui screenshot processes](assets/screenshots/processes.png)
+
 
 ### Status
 Work in progress

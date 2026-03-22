@@ -10,6 +10,7 @@ import (
 	"github.com/omar0ali/sysmontui/scenes/options"
 	"github.com/omar0ali/sysmontui/scenes/perm/controls"
 	"github.com/omar0ali/sysmontui/scenes/perm/cpuinfo"
+	"github.com/omar0ali/sysmontui/scenes/processes"
 	"github.com/omar0ali/sysmontui/screentui/entity"
 	"github.com/omar0ali/sysmontui/screentui/window"
 )
@@ -43,9 +44,11 @@ func main() {
 		entities.GetPermEntities(),
 	)[0].LogsAddToList
 
-	entities.AddEntity("0", home.Init())                                               // non perm scene
-	entities.AddEntity("1", meminfo.Init(logsFunc, ctx, options.Options{Interval: 2})) // non perm scene
+	// non perm scenes
+	entities.AddEntity("0", home.Init())
+	entities.AddEntity("1", meminfo.Init(logsFunc, ctx, options.Options{Interval: 2}))
 	entities.AddEntity("2", cpustat.Init(logsFunc, ctx, options.Options{Interval: 2}))
+	entities.AddEntity("3", processes.Init(logsFunc, ctx, options.Options{Interval: 3}))
 
 	entities.SetScene("0") // set current scene to be displayed / rendered
 
