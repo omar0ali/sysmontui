@@ -48,4 +48,4 @@ func (c *CpuInfo) Render(s interfaces.ScreenControl) {
 	}
 }
 
-func (c *CpuInfo) Events(ev *tcell.EventKey) {}
+func (c *CpuInfo) Events(ev tcell.Event) {}

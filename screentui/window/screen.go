@@ -35,16 +35,16 @@ func New(so *ScreenOption) (*screen, error) {
 	}, nil
 }
 
-func (s *screen) keyEvents(events func(ev *tcell.EventKey)) {
+func (s *screen) keyEvents(events func(ev tcell.Event)) {
 	for {
 		ev := <-s.screen.EventQ()
+
 		switch ev.(type) {
 		case *tcell.EventResize:
 			s.screen.Sync()
 		}
-		if ev, ok := ev.(*tcell.EventKey); ok {
-			events(ev)
-		}
+
+		events(ev)
 	}
 }
 
@@ -82,7 +82,7 @@ func (s *screen) refreshScreen(update func(delta float64), render func()) {
 func (s *screen) run(
 	update func(elapsed float64),
 	render func(),
-	events func(ev *tcell.EventKey),
+	events func(ev tcell.Event),
 ) {
 	go s.keyEvents(events)          // read input on a go routine
 	s.refreshScreen(update, render) // show screen and refresh
@@ -105,10 +105,13 @@ func (s *screen) Run(entity *entity.Entity, whenExit context.CancelFunc) {
 		for _, j := range entity.GetPermEntities() {
 			j.Render(s)
 		}
-	}, func(e *tcell.EventKey) {
+	}, func(e tcell.Event) {
 		// current
-		if e.Key() == tcell.KeyCtrlQ || e.Key() == tcell.KeyESC {
-			s.Exit()
+		switch e := e.(type) {
+		case *tcell.EventKey:
+			if e.Key() == tcell.KeyCtrlQ || e.Key() == tcell.KeyESC {
+				s.Exit()
+			}
 		}
 
 		// from entities

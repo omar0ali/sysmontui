@@ -21,4 +21,4 @@ func (h *Home) Render(s interfaces.ScreenControl) {
 	startXPos := 32
 	window.Text(s, screentui.P(float64(startXPos), 4), "Sysmon TUI Application.")
 }
-func (h *Home) Events(ev *tcell.EventKey) {}
+func (h *Home) Events(ev tcell.Event) {}

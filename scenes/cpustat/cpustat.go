@@ -84,4 +84,4 @@ func (c *CpuStat) Render(s interfaces.ScreenControl) {
 		})
 	}
 }
-func (c *CpuStat) Events(ev *tcell.EventKey) {}
+func (c *CpuStat) Events(ev tcell.Event) {}

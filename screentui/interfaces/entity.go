@@ -7,7 +7,7 @@ import (
 type EntityActions interface {
 	Update(d float64)
 	Render(ScreenControl)
-	Events(ev *tcell.EventKey)
+	Events(ev tcell.Event)
 }
 
 type SceneControl interface {

@@ -79,6 +79,7 @@ func (c *Controls) Render(s interfaces.ScreenControl) {
 	}
 
 	// footer line for logs
+	window.LineHorizontalWithStartAndEnd(s, 31, w, h-15, tcell.RuneHLine) // for ui
 	window.Text(s, screentui.P(33, float64(h)-14), "-- Logs --")
 	window.LineHorizontalWithStartAndEnd(s, 31, w, h-13, tcell.RuneHLine) // for ui
 
@@ -90,30 +91,33 @@ func (c *Controls) Render(s interfaces.ScreenControl) {
 	s.SetContent(32, h-12, '*')
 }
 
-func (c *Controls) Events(ev *tcell.EventKey) {
-	s := ev.Str()
-	if len(s) == 1 && s[0] >= '0' && s[0] <= '4' {
-		c.MenuResetList()
+func (c *Controls) Events(ev tcell.Event) {
+	switch ev := ev.(type) {
+	case *tcell.EventKey:
+		s := ev.Str()
+		if len(s) == 1 && s[0] >= '0' && s[0] <= '4' {
+			c.MenuResetList()
 
-		page := int(s[0] - '0')
-		switch page {
-		case 0:
-			c.sceneControl.SetScene("0")
-			c.LogsAddToList("Home Page")
-		case 1:
-			c.MenuAddToList("-------------------")
-			c.MenuAddToList("[T] Toggle (MB, GB)")
-			c.sceneControl.SetScene("1")
-			c.LogsAddToList("Memory Page")
-		case 2:
-			c.sceneControl.SetScene("2")
-			c.LogsAddToList("CPU Status Page")
-		case 3:
-			c.sceneControl.SetScene("3")
-			c.LogsAddToList("Running Processes Page")
-			c.MenuAddToList("-------------------")
-			c.MenuAddToList("[j] Scroll Up")
-			c.MenuAddToList("[k] Scroll Down")
+			page := int(s[0] - '0')
+			switch page {
+			case 0:
+				c.sceneControl.SetScene("0")
+				c.LogsAddToList("Home Page")
+			case 1:
+				c.MenuAddToList("-------------------")
+				c.MenuAddToList("[T] Toggle (MB, GB)")
+				c.sceneControl.SetScene("1")
+				c.LogsAddToList("Memory Page")
+			case 2:
+				c.sceneControl.SetScene("2")
+				c.LogsAddToList("CPU Status Page")
+			case 3:
+				c.sceneControl.SetScene("3")
+				c.LogsAddToList("Running Processes Page")
+				c.MenuAddToList("-------------------")
+				c.MenuAddToList("[j] Scroll Up")
+				c.MenuAddToList("[k] Scroll Down")
+			}
 		}
 	}
 }

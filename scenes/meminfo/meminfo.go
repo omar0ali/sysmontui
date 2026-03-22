@@ -109,16 +109,19 @@ func (m *MemInfo) Render(s interfaces.ScreenControl) {
 	})
 }
 
-func (m *MemInfo) Events(ev *tcell.EventKey) {
-	if ev.Str() == "T" {
-		if m.unit == pkg.MB {
-			m.unit = pkg.GB
-			m.unitStr = "GB"
-			m.LogsAddToList("Toggle to GB")
-		} else {
-			m.unit = pkg.MB
-			m.unitStr = "MB"
-			m.LogsAddToList("Toggle to MB")
+func (m *MemInfo) Events(ev tcell.Event) {
+	switch e := ev.(type) {
+	case *tcell.EventKey:
+		if e.Str() == "T" {
+			if m.unit == pkg.MB {
+				m.unit = pkg.GB
+				m.unitStr = "GB"
+				m.LogsAddToList("Toggle to GB")
+			} else {
+				m.unit = pkg.MB
+				m.unitStr = "MB"
+				m.LogsAddToList("Toggle to MB")
+			}
 		}
 	}
 }
