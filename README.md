@@ -34,12 +34,12 @@ Linux only (uses /proc)
 ```bash
 git clone https://github.com/omar0ali/sysmontui.git
 cd sysmontui
-go build -o build/sysmontui cmd/cli/main.go
+go build -o build/sysmontui cmd/sysmontui/main.go
 ```
 
 ### Using Go (recommended) - Linux only
 ```bash
-go install github.com/omar0ali/sysmontui/cmd/cli@latest
+go install github.com/omar0ali/sysmontui/cmd/sysmontui@latest
 ```
 
 ### Status
