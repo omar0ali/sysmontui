@@ -28,6 +28,19 @@ Linux only (uses /proc)
 #### Running Processes
 ![Sysmontui screenshot processes](assets/screenshots/processes.png)
 
+## Installation
+
+### From source
+```bash
+git clone https://github.com/omar0ali/sysmontui.git
+cd sysmontui
+go build -o build/sysmontui cmd/cli/main.go
+```
+
+### Using Go (recommended) - Linux only
+```bash
+go install github.com/omar0ali/sysmontui/cmd/cli@latest
+```
 
 ### Status
 Work in progress
