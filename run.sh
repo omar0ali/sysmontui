@@ -4,7 +4,7 @@ ENV=$1
 
 if [ "$ENV" = "prod" ]; then
     echo "Running in production..."
-    go run cmd/cli/main.go
+    go run cmd/sysmontui/main.go
 
 elif [ "$ENV" = "dev" ]; then
     echo "Running in development..."
@@ -12,8 +12,8 @@ elif [ "$ENV" = "dev" ]; then
 
 elif [ "$ENV" = "build" ]; then
     echo "Building binary..."
-    go build -o build/sysmontui cmd/cli/main.go
-    echo "Done: ./build/sysmontui"
+    go build -o build/sysmontui cmd/sysmontui/main.go
+    echo "Run: ./build/sysmontui"
 else
     echo "Usage: ./run.sh [dev|prod|build]"
     exit 1

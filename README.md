@@ -39,7 +39,7 @@ go build -o build/sysmontui cmd/cli/main.go
 
 ### Using Go (recommended) - Linux only
 ```bash
-go install github.com/omar0ali/sysmontui/cmd/cli@latest
+go install github.com/omar0ali/sysmontui/cmd/sysmontui@latest
 ```
 
 ### Status
