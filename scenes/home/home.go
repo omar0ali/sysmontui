@@ -37,7 +37,7 @@ func (h *Home) Render(s interfaces.ScreenControl) {
 	// list of features
 	window.Text(s, screentui.P(float64(startXPos), 13), "- CPU usage information")
 	window.Text(s, screentui.P(float64(startXPos), 14), "- Memory statistics")
-	window.Text(s, screentui.P(float64(startXPos), 15), "- List of processes")
+	window.Text(s, screentui.P(float64(startXPos), 15), "- List of processes +(Sort, Order)")
 
 }
 func (h *Home) Events(ev tcell.Event) {}

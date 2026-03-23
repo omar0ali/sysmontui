@@ -3,7 +3,6 @@ package processes
 import (
 	"context"
 	"fmt"
-	"sort"
 	"sync"
 	"time"
 
@@ -37,6 +36,8 @@ type Processes struct {
 	Processes     []*process
 	scrollWindow  scrollWindow
 	getScreenSize func() (int, int)
+	sortedBy      sortBy
+	desc          bool
 }
 
 func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Options) *Processes {
@@ -44,6 +45,7 @@ func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Optio
 		LogsAddToList: logsFunc,
 		Processes:     []*process{},
 		scrollWindow:  scrollWindow{},
+		sortedBy:      sortByName,
 	}
 
 	processes.LogsAddToList("Reading processes...")
@@ -184,10 +186,8 @@ func (p *Processes) Render(s interfaces.ScreenControl) {
 		return
 	}
 
-	// sort processes by name
-	sort.Slice(p.Processes, func(i, j int) bool {
-		return p.Processes[i].Name < p.Processes[j].Name
-	})
+	// sort processes by name default
+	sortProcesses(p.sortedBy, p.desc, p.Processes)
 
 	for y, proc := range p.Processes[p.scrollWindow.start:p.scrollWindow.end] {
 		window.ListOfTextsWithPadding(s, screentui.P(float64(startXPos), float64(startYPos+y+3)), paddingBetweenText, []string{
@@ -199,6 +199,16 @@ func (p *Processes) Render(s interfaces.ScreenControl) {
 }
 
 func (p *Processes) Events(ev tcell.Event) {
+	var nextSort = func(by sortBy) sortBy {
+		if by == sortByName {
+			return sortByPID
+		}
+		if by == sortByPID {
+			return sortByCPU
+		}
+		return sortByName
+	}
+
 	switch ev := ev.(type) {
 	case *tcell.EventResize: // when screen resized
 		_, h := p.getScreenSize()
@@ -224,6 +234,16 @@ func (p *Processes) Events(ev tcell.Event) {
 				p.scrollWindow.start--
 				p.scrollWindow.end--
 			}
+		} else if ev.Str() == "T" {
+			p.sortedBy = nextSort(p.sortedBy)
+			p.LogsAddToList(fmt.Sprintf("Sorted By %s", p.sortedBy.String()))
+		} else if ev.Str() == "t" {
+			p.desc = !p.desc
+			order := "Ascending"
+			if p.desc {
+				order = "Descending"
+			}
+			p.LogsAddToList("Order: " + order)
 		}
 	}
 }

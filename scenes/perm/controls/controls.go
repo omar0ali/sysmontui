@@ -117,6 +117,8 @@ func (c *Controls) Events(ev tcell.Event) {
 				c.MenuAddToList("-------------------")
 				c.MenuAddToList("[j] Scroll Up")
 				c.MenuAddToList("[k] Scroll Down")
+				c.MenuAddToList("[t] Toggle Asc/Desc")
+				c.MenuAddToList("[T] Toggle Sort")
 			}
 		}
 	}

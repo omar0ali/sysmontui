@@ -9,12 +9,12 @@
 
 
 ### Checklist:
-- [x] Home Page
-- [x] CPU Status Info Page
-- [x] Memory Info Page
+- [x] Showing CPU Status
+- [x] Showing Memory Info
 - [x] Showing list of processes
-- [ ] Support sorting processes by different fields (name, PID, etc.)
+- [x] Support sorting processes by different fields (name, PID, etc.) and ordering (Ascending, Descending)
 - [ ] Search processes
+- [ ] Kill process
 - [ ] UI Polishing & Clean up
 
 ### Requirements
@@ -27,6 +27,9 @@ Linux only (uses /proc)
 ![Sysmontui screenshot meminfo](assets/screenshots/meminfo.png)
 #### Running Processes
 ![Sysmontui screenshot processes](assets/screenshots/processes.png)
+#### Sorting By (name, pid, cpu usage) and ordering (asc, desc)
+![Sysmontui screenshot processes sorting 1](assets/screenshots/sort(1).png)
+![Sysmontui screenshot processes sorting 2](assets/screenshots/sort(2).png)
 
 ## Installation
 
