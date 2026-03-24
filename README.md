@@ -50,3 +50,7 @@ go install github.com/omar0ali/sysmontui/cmd/sysmontui@latest
 
 ### Status
 Work in progress
+
+## Third-Party Licenses
+This project uses [tcell](https://github.com/gdamore/tcell) (Apache License 2.0):
+https://github.com/gdamore/tcell
