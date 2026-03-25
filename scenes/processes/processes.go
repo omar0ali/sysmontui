@@ -187,9 +187,13 @@ func (p *Processes) Render(s interfaces.ScreenControl) {
 	)
 
 	if len(p.Processes) == 0 {
+		var status string = "Loading..."
+		if p.searchFor != "" {
+			status = "No Processes"
+		}
 		window.Text(s,
 			screentui.P(float64(startXPos), float64(startYPos+3)),
-			"Loading...",
+			status,
 		)
 		return
 	}
