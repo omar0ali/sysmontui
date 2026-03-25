@@ -38,6 +38,7 @@ func (h *Home) Render(s interfaces.ScreenControl) {
 	window.Text(s, screentui.P(float64(startXPos), 13), "- CPU usage information")
 	window.Text(s, screentui.P(float64(startXPos), 14), "- Memory statistics")
 	window.Text(s, screentui.P(float64(startXPos), 15), "- List of processes +(Sort, Order)")
+	window.Text(s, screentui.P(float64(startXPos), 16), "- Search for processes by name")
 
 }
 func (h *Home) Events(ev tcell.Event) {}

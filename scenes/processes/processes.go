@@ -3,6 +3,7 @@ package processes
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -35,9 +36,10 @@ type Processes struct {
 	LogsAddToList controls.LogsAddToList
 	Processes     []*process
 	scrollWindow  scrollWindow
-	getScreenSize func() (int, int)
 	sortedBy      sortBy
 	desc          bool
+	search        *search
+	searchFor     string
 }
 
 func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Options) *Processes {
@@ -46,6 +48,7 @@ func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Optio
 		Processes:     []*process{},
 		scrollWindow:  scrollWindow{},
 		sortedBy:      sortByName,
+		search:        nil,
 	}
 
 	processes.LogsAddToList("Reading processes...")
@@ -117,8 +120,18 @@ func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Optio
 
 					cpuPercent := float64(procDelta) / float64(totalDelta) * 100
 
+					// -- apply search
+					name := strings.ToLower(p.Stat.Comm)
+					search := strings.TrimSpace(strings.ToLower(processes.searchFor))
+
+					if search != "" && !strings.Contains(name, search) {
+						continue
+					}
+
+					// --
+
 					processes.Processes = append(processes.Processes, &process{
-						Name:       p.Stat.Comm,
+						Name:       name,
 						PID:        pid,
 						CPUPercent: cpuPercent,
 					})
@@ -137,25 +150,20 @@ func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Optio
 	return processes
 }
 
-func (p *Processes) Update(d float64) {}
+func (p *Processes) Update(d float64) {
+	if p.search != nil {
+		p.search.Update(d)
+	}
+}
 
 func (p *Processes) Render(s interfaces.ScreenControl) {
-	// this will be used to get the size
-	// when screen is resize triggered.
-	if p.getScreenSize == nil {
-		p.getScreenSize = s.Size
+	if p.search != nil {
+		p.search.Render(s)
 	}
 
 	// important: used for the scrollable area where the processes are displayed
 	// must set both (end, max)
-
-	// check max must be set when
-	if p.scrollWindow.max == 0 {
-		_, h := p.getScreenSize()
-		p.scrollWindow.max = h - PADDING_FOOTER
-		// update end
-		p.scrollWindow.end = p.scrollWindow.max
-	}
+	p.scrollWindow.updateArea(p, s)
 
 	s.Color(color.White)
 	window.Text(s, screentui.P(1, 1), "Page: Running Processes") // title
@@ -199,6 +207,28 @@ func (p *Processes) Render(s interfaces.ScreenControl) {
 }
 
 func (p *Processes) Events(ev tcell.Event) {
+	if p.search != nil {
+		switch ev := ev.(type) {
+		case *tcell.EventKey:
+			switch ev.Str() {
+			case "/":
+				p.LogsAddToList("Search Canceled / Reset")
+				p.searchFor = ""
+				p.search = nil
+				return
+			}
+			switch ev.Key() {
+			case tcell.KeyEnter:
+				p.LogsAddToList("Searching for: " + p.search.text)
+				p.searchFor = p.search.text
+				p.search = nil
+				return
+			}
+		}
+		p.search.Events(ev)
+		return
+	}
+
 	var nextSort = func(by sortBy) sortBy {
 		if by == sortByName {
 			return sortByPID
@@ -210,19 +240,6 @@ func (p *Processes) Events(ev tcell.Event) {
 	}
 
 	switch ev := ev.(type) {
-	case *tcell.EventResize: // when screen resized
-		_, h := p.getScreenSize()
-
-		// get the latest hight of the screen -
-		// used for the scrollable area in processes page
-		p.scrollWindow.max = h - PADDING_FOOTER
-		if p.scrollWindow.end == 0 {
-			p.scrollWindow.end = p.scrollWindow.max
-		}
-
-		// update end
-		p.scrollWindow.end = p.scrollWindow.max
-
 	case *tcell.EventKey:
 		if ev.Str() == "j" {
 			if p.scrollWindow.end < len(p.Processes) {
@@ -244,6 +261,27 @@ func (p *Processes) Events(ev tcell.Event) {
 				order = "Descending"
 			}
 			p.LogsAddToList("Order: " + order)
+		} else if ev.Str() == "/" {
+			p.search = &search{}
+			p.LogsAddToList("Search ON")
 		}
+	}
+}
+
+func (sc *scrollWindow) updateArea(p *Processes, s interfaces.ScreenControl) {
+	_, h := s.Size()
+	// get the latest hight of the screen -
+	// used for the scrollable area in processes page
+	sc.max = h - PADDING_FOOTER
+
+	// this fix a problem when .start is at a position that > than what it
+	// its displayed. When searching, it might crash.
+	if sc.start > len(p.Processes) {
+		sc.start = 0
+	}
+
+	sc.end = sc.start + sc.max
+	if len(p.Processes) < sc.max {
+		sc.end = len(p.Processes)
 	}
 }
