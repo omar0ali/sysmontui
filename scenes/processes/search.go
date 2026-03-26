@@ -13,7 +13,8 @@ type search struct {
 
 func (s *search) Update(d float64) {}
 func (s *search) Render(sc interfaces.ScreenControl) {
-	window.Text(sc, screentui.P(33, 1), "Search: ["+s.text+"] [Enter] Search - [/] Cancel | Reset")
+	window.Text(sc, screentui.P(33, 1), "Search: "+s.text)
+	window.Text(sc, screentui.P(33, 2), "[Enter] Search - [/] Cancel | Reset")
 }
 
 func (s *search) Events(ev tcell.Event) {
