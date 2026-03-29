@@ -14,7 +14,7 @@
 - [x] Showing list of processes
 - [x] Support sorting processes by different fields (name, PID, etc.) and ordering (Ascending, Descending)
 - [x] Search processes by name
-- [ ] Kill process
+- [x] Kill process
 - [ ] UI Polishing & Clean up
 
 ### Requirements
@@ -32,6 +32,8 @@ Linux only (uses /proc)
 ![Sysmontui screenshot processes sorting 2](assets/screenshots/sort(2).png)
 #### Search processes by name
 ![Sysmontui screenshot search](assets/screenshots/search.png)
+#### Kill process - sending SIGTERM
+![Sysmontui screenshot sigterm](assets/screenshots/sigterm.png)
 
 ## Installation
 

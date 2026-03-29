@@ -22,7 +22,7 @@ const (
 )
 
 type scrollWindow struct {
-	start, end, max int
+	start, end, max, currentIndex int
 }
 
 type process struct {
@@ -45,7 +45,8 @@ type Processes struct {
 	search *search
 	kill   *kill
 
-	searchFor string
+	searchFor       string
+	selectedProcess *process
 
 	mController interfaces.MenuController
 }
@@ -210,9 +211,21 @@ func (p *Processes) Render(s interfaces.ScreenControl) {
 
 	// sort processes by name default
 	sortProcesses(p.sortedBy, p.desc, p.Processes)
+
+	// displaying list of processes
+	currentProcessIndex := p.scrollWindow.currentIndex + startYPos + 3
 	for y, proc := range p.Processes[p.scrollWindow.start:p.scrollWindow.end] {
+		var name string
+		if currentProcessIndex == startYPos+y+3 {
+			name = fmt.Sprintf("[K] %s", proc.Name)
+			p.selectedProcess = proc
+			s.Color(color.YellowGreen)
+		} else {
+			name = fmt.Sprintf("%s", proc.Name)
+			s.Color(color.White)
+		}
 		window.ListOfTextsWithPadding(s, screentui.P(float64(startXPos), float64(startYPos+y+3)), paddingBetweenText, []string{
-			proc.Name,
+			name,
 			fmt.Sprintf("%d", proc.PID),
 			fmt.Sprintf("%.2f%%", proc.CPUPercent),
 		})
@@ -223,6 +236,7 @@ func (p *Processes) Events(ev tcell.Event) {
 	// search processes events
 	if p.search != nil {
 		closeSearchWith := func(search string) {
+			p.scrollWindow.currentIndex = 0
 			p.searchFor = search
 			p.search = nil
 			p.mController.Unlock()
@@ -251,6 +265,7 @@ func (p *Processes) Events(ev tcell.Event) {
 		close := func() {
 			p.kill = nil
 			p.mController.Unlock()
+			p.scrollWindow.currentIndex = 0
 		}
 		switch ev := ev.(type) {
 		case *tcell.EventKey:
@@ -262,8 +277,7 @@ func (p *Processes) Events(ev tcell.Event) {
 			}
 			switch ev.Key() {
 			case tcell.KeyEnter:
-				//TODO: kill process
-				// p.LogsAddToList("SIGTERM: " + p.selectedProcess.Name)
+				p.LogsAddToList("SIGTERM: " + p.selectedProcess.Name)
 				err := p.kill.SIGTERM()
 				if err != nil {
 					p.LogsAddToList(err.Error())
@@ -277,12 +291,26 @@ func (p *Processes) Events(ev tcell.Event) {
 
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
+
 		if ev.Str() == "j" {
-			if p.scrollWindow.end < len(p.Processes) {
+			if p.scrollWindow.currentIndex < p.scrollWindow.max-1 &&
+				p.scrollWindow.start+p.scrollWindow.currentIndex < len(p.Processes)-1 {
+				p.scrollWindow.currentIndex++
+				return
+			}
+
+			// otherwise scroll window
+			if p.scrollWindow.end < len(p.Processes)-1 {
 				p.scrollWindow.start++
 				p.scrollWindow.end++
 			}
 		} else if ev.Str() == "k" {
+			if p.scrollWindow.currentIndex > 0 {
+				p.scrollWindow.currentIndex--
+				return
+			}
+
+			// otherwise scroll window up
 			if p.scrollWindow.start > 0 {
 				p.scrollWindow.start--
 				p.scrollWindow.end--
@@ -302,7 +330,11 @@ func (p *Processes) Events(ev tcell.Event) {
 			p.search = &search{}
 			p.LogsAddToList("Search ON")
 		} else if ev.Str() == "K" {
-			//TODO: kill process
+			p.mController.Lock()
+			p.kill = &kill{
+				process: p.selectedProcess,
+			}
+			p.LogsAddToList("Process Selected: " + p.selectedProcess.Name + " - Waiting action...")
 		}
 	}
 }
