@@ -45,16 +45,19 @@ func main() {
 		cpuinfo.Init(),
 	)
 
-	// logs func can be used anywhere, when its required
-	logsFunc := entity.GetAllEntitiesByType[*controls.Controls](
+	// control a Permanent Scene Menu
+	control := entity.GetAllEntitiesByType[*controls.Controls](
 		entities.GetPermEntities(),
-	)[0].LogsAddToList
+	)[0]
+
+	// logs func can be used anywhere, when its required
+	logsFunc := control.LogsAddToList
 
 	// non perm scenes
 	entities.AddEntity("0", home.Init())
 	entities.AddEntity("1", meminfo.Init(logsFunc, ctx, options.Options{Interval: 2}))
 	entities.AddEntity("2", cpustat.Init(logsFunc, ctx, options.Options{Interval: 2}))
-	entities.AddEntity("3", processes.Init(logsFunc, ctx, options.Options{Interval: 3}))
+	entities.AddEntity("3", processes.Init(logsFunc, ctx, options.Options{Interval: 3, MenuController: control}))
 
 	entities.SetScene("0") // set current scene to be displayed / rendered
 

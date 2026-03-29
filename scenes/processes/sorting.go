@@ -45,3 +45,13 @@ func (s sortBy) String() string {
 		return "Name"
 	}
 }
+
+func NextSort(by sortBy) sortBy {
+	if by == sortByName {
+		return sortByPID
+	}
+	if by == sortByPID {
+		return sortByCPU
+	}
+	return sortByName
+}

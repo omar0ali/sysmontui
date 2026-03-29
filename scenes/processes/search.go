@@ -11,7 +11,6 @@ type search struct {
 	text string
 }
 
-func (s *search) Update(d float64) {}
 func (s *search) Render(sc interfaces.ScreenControl) {
 	window.Text(sc, screentui.P(33, 1), "Search: "+s.text)
 	window.Text(sc, screentui.P(33, 2), "[Enter] Search - [/] Cancel | Reset")
@@ -26,7 +25,7 @@ func (s *search) Events(ev tcell.Event) {
 				s.text = s.text[:len(s.text)-1]
 			}
 		default:
-			s.text += string(ev.Str())
+			s.text += ev.Str()
 		}
 	}
 }
