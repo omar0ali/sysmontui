@@ -32,14 +32,22 @@ type process struct {
 }
 
 type Processes struct {
-	mu            sync.RWMutex
+	mu sync.RWMutex
+
 	LogsAddToList controls.LogsAddToList
-	Processes     []*process
-	scrollWindow  scrollWindow
-	sortedBy      sortBy
-	desc          bool
-	search        *search
-	searchFor     string
+
+	Processes    []*process
+	scrollWindow scrollWindow
+
+	sortedBy sortBy
+	desc     bool
+
+	search *search
+	kill   *kill
+
+	searchFor string
+
+	mController interfaces.MenuController
 }
 
 func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Options) *Processes {
@@ -48,7 +56,12 @@ func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Optio
 		Processes:     []*process{},
 		scrollWindow:  scrollWindow{},
 		sortedBy:      sortByName,
-		search:        nil,
+	}
+
+	if op.MenuController == nil {
+		panic("Missing Controls Pause")
+	} else {
+		processes.mController = op.MenuController
 	}
 
 	processes.LogsAddToList("Reading processes...")
@@ -86,7 +99,8 @@ func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Optio
 					continue
 				}
 
-				// First run → just initialize baseline
+				// First run
+				// initialize baseline
 				if !initialized {
 					for pid, p := range procs {
 						prevProcCPU[pid] = p.Stat.UTime + p.Stat.STime
@@ -109,9 +123,12 @@ func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Optio
 				processes.mu.Lock()
 				processes.Processes = processes.Processes[:0] // reset list
 
+				counter := 1
 				for pid, p := range procs {
 					prev, ok := prevProcCPU[pid]
 					if !ok {
+						// init baseline for new process
+						prevProcCPU[pid] = p.Stat.UTime + p.Stat.STime
 						continue
 					}
 
@@ -129,17 +146,11 @@ func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Optio
 					}
 
 					// --
-
-					processes.Processes = append(processes.Processes, &process{
-						Name:       name,
-						PID:        pid,
-						CPUPercent: cpuPercent,
-					})
-
+					processes.Processes = append(processes.Processes, &process{name, pid, cpuPercent})
+					counter++
 					// update baseline
 					prevProcCPU[pid] = curr
 				}
-
 				processes.mu.Unlock()
 
 				prevCPU = currCPU
@@ -150,15 +161,14 @@ func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Optio
 	return processes
 }
 
-func (p *Processes) Update(d float64) {
-	if p.search != nil {
-		p.search.Update(d)
-	}
-}
+func (p *Processes) Update(d float64) {}
 
 func (p *Processes) Render(s interfaces.ScreenControl) {
 	if p.search != nil {
 		p.search.Render(s)
+	}
+	if p.kill != nil {
+		p.kill.Render(s)
 	}
 
 	// important: used for the scrollable area where the processes are displayed
@@ -168,7 +178,7 @@ func (p *Processes) Render(s interfaces.ScreenControl) {
 	s.Color(color.White)
 	window.Text(s, screentui.P(1, 1), "Page: Running Processes") // title
 
-	paddingBetweenText := 40
+	paddingBetweenText := 30
 	startXPos := 32
 	startYPos := 4
 	window.Text(s,
@@ -187,7 +197,7 @@ func (p *Processes) Render(s interfaces.ScreenControl) {
 	)
 
 	if len(p.Processes) == 0 {
-		var status string = "Loading..."
+		status := "Loading..."
 		if p.searchFor != "" {
 			status = "No Processes"
 		}
@@ -200,7 +210,6 @@ func (p *Processes) Render(s interfaces.ScreenControl) {
 
 	// sort processes by name default
 	sortProcesses(p.sortedBy, p.desc, p.Processes)
-
 	for y, proc := range p.Processes[p.scrollWindow.start:p.scrollWindow.end] {
 		window.ListOfTextsWithPadding(s, screentui.P(float64(startXPos), float64(startYPos+y+3)), paddingBetweenText, []string{
 			proc.Name,
@@ -211,21 +220,25 @@ func (p *Processes) Render(s interfaces.ScreenControl) {
 }
 
 func (p *Processes) Events(ev tcell.Event) {
+	// search processes events
 	if p.search != nil {
+		closeSearchWith := func(search string) {
+			p.searchFor = search
+			p.search = nil
+			p.mController.Unlock()
+		}
 		switch ev := ev.(type) {
 		case *tcell.EventKey:
 			switch ev.Str() {
 			case "/":
 				p.LogsAddToList("Search Canceled / Reset")
-				p.searchFor = ""
-				p.search = nil
+				closeSearchWith("")
 				return
 			}
 			switch ev.Key() {
 			case tcell.KeyEnter:
 				p.LogsAddToList("Searching for: " + p.search.text)
-				p.searchFor = p.search.text
-				p.search = nil
+				closeSearchWith(p.search.text)
 				return
 			}
 		}
@@ -233,14 +246,33 @@ func (p *Processes) Events(ev tcell.Event) {
 		return
 	}
 
-	var nextSort = func(by sortBy) sortBy {
-		if by == sortByName {
-			return sortByPID
+	// kill a process events
+	if p.kill != nil {
+		close := func() {
+			p.kill = nil
+			p.mController.Unlock()
 		}
-		if by == sortByPID {
-			return sortByCPU
+		switch ev := ev.(type) {
+		case *tcell.EventKey:
+			switch ev.Str() {
+			case "/":
+				p.LogsAddToList("Canceled")
+				close()
+				return
+			}
+			switch ev.Key() {
+			case tcell.KeyEnter:
+				//TODO: kill process
+				// p.LogsAddToList("SIGTERM: " + p.selectedProcess.Name)
+				err := p.kill.SIGTERM()
+				if err != nil {
+					p.LogsAddToList(err.Error())
+				}
+				close()
+				return
+			}
 		}
-		return sortByName
+		return
 	}
 
 	switch ev := ev.(type) {
@@ -256,7 +288,7 @@ func (p *Processes) Events(ev tcell.Event) {
 				p.scrollWindow.end--
 			}
 		} else if ev.Str() == "T" {
-			p.sortedBy = nextSort(p.sortedBy)
+			p.sortedBy = NextSort(p.sortedBy)
 			p.LogsAddToList(fmt.Sprintf("Sorted By %s", p.sortedBy.String()))
 		} else if ev.Str() == "t" {
 			p.desc = !p.desc
@@ -266,8 +298,11 @@ func (p *Processes) Events(ev tcell.Event) {
 			}
 			p.LogsAddToList("Order: " + order)
 		} else if ev.Str() == "/" {
+			p.mController.Lock()
 			p.search = &search{}
 			p.LogsAddToList("Search ON")
+		} else if ev.Str() == "K" {
+			//TODO: kill process
 		}
 	}
 }
