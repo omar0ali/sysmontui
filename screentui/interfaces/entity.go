@@ -12,5 +12,10 @@ type EntityActions interface {
 
 type SceneControl interface {
 	GetScene() string
-	SetScene(s string)
+	SetScene(s string) bool
+}
+
+type MenuController interface {
+	Lock()
+	Unlock()
 }

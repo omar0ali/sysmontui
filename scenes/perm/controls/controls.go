@@ -17,6 +17,8 @@ type Controls struct {
 	listOfControls   []string
 	listOfLogs       []string
 	sceneControl     interfaces.SceneControl
+
+	lockMenu bool
 }
 
 func Init(s interfaces.SceneControl) *Controls {
@@ -92,6 +94,9 @@ func (c *Controls) Render(s interfaces.ScreenControl) {
 }
 
 func (c *Controls) Events(ev tcell.Event) {
+	if c.lockMenu {
+		return
+	}
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
 		s := ev.Str()
@@ -101,27 +106,39 @@ func (c *Controls) Events(ev tcell.Event) {
 			page := int(s[0] - '0')
 			switch page {
 			case 0:
-				c.sceneControl.SetScene("0")
-				c.LogsAddToList("Home Page")
+				if c.sceneControl.SetScene("0") {
+					c.LogsAddToList("Home Page")
+				}
 			case 1:
+				if c.sceneControl.SetScene("1") {
+					c.LogsAddToList("Memory Page")
+				}
 				c.MenuAddToList("-------------------")
 				c.MenuAddToList("[T] Toggle (MB, GB)")
-				c.sceneControl.SetScene("1")
-				c.LogsAddToList("Memory Page")
 			case 2:
-				c.sceneControl.SetScene("2")
-				c.LogsAddToList("CPU Status Page")
+				if c.sceneControl.SetScene("2") {
+					c.LogsAddToList("CPU Status Page")
+				}
 			case 3:
-				c.sceneControl.SetScene("3")
-				c.LogsAddToList("Running Processes Page")
+				if c.sceneControl.SetScene("3") {
+					c.LogsAddToList("Running Processes Page")
+				}
 				c.MenuAddToList("-------------------")
 				c.MenuAddToList("[j] Scroll Up")
 				c.MenuAddToList("[k] Scroll Down")
 				c.MenuAddToList("[t] Toggle Asc/Desc")
 				c.MenuAddToList("[T] Toggle Sort")
-				c.MenuAddToList("[/] Search By Name | Cancel")
-				c.MenuAddToList("[Enter] Search")
+				c.MenuAddToList("[/] Search By Name")
+				c.MenuAddToList("[K] Kill Process")
 			}
 		}
 	}
+}
+
+func (c *Controls) Lock() {
+	c.lockMenu = true
+}
+
+func (c *Controls) Unlock() {
+	c.lockMenu = false
 }

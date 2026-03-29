@@ -19,8 +19,12 @@ func Init() *Entity {
 	}
 }
 
-func (e *Entity) SetScene(s string) {
-	e.currentScene = s
+func (e *Entity) SetScene(s string) bool {
+	if e.currentScene != s {
+		e.currentScene = s
+		return true
+	}
+	return false
 }
 
 func (e *Entity) GetScene() string {
