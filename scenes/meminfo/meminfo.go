@@ -22,10 +22,10 @@ type MemInfo struct {
 	mu            sync.RWMutex
 	unit          pkg.Unit
 	unitStr       string
-	LogsAddToList controls.LogsAddToList
+	LogsAddToList controls.LogsControl
 }
 
-func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Options) *MemInfo {
+func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options) *MemInfo {
 	meminfo := &MemInfo{
 		unit:          pkg.MB,
 		unitStr:       "MB",

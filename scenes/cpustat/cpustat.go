@@ -20,10 +20,10 @@ type CpuStat struct {
 	mu       sync.RWMutex
 	cpuUsage []float64
 	avg      float64
-	logsFunc controls.LogsAddToList
+	logsFunc controls.LogsControl
 }
 
-func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Options) *CpuStat {
+func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options) *CpuStat {
 
 	cpustats := &CpuStat{
 		logsFunc: logsFunc,

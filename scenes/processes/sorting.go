@@ -46,7 +46,7 @@ func (s sortBy) String() string {
 	}
 }
 
-func NextSort(by sortBy) sortBy {
+func nextSort(by sortBy) sortBy {
 	if by == sortByName {
 		return sortByPID
 	}

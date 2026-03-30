@@ -10,7 +10,7 @@ import (
 	"github.com/omar0ali/sysmontui/screentui/window"
 )
 
-type LogsAddToList func(string)
+type LogsControl func(string)
 
 type Controls struct {
 	defaultListLimit int

@@ -17,57 +17,52 @@ import (
 	"github.com/omar0ali/sysmontui/screentui/window"
 )
 
-const (
-	PADDING_FOOTER = 22
-)
-
-type scrollWindow struct {
-	start, end, max, currentIndex int
-}
-
 type process struct {
 	Name       string
 	PID        int
 	CPUPercent float64
 }
 
-type Processes struct {
+type ProcessesScene struct {
 	mu sync.RWMutex
 
-	LogsAddToList controls.LogsAddToList
+	Logs controls.LogsControl
 
-	Processes    []*process
+	processes    []*process
 	scrollWindow scrollWindow
 
+	// order
 	sortedBy sortBy
 	desc     bool
 
-	search *search
-	kill   *kill
+	// actions
+	search    *search
+	kill      *kill
+	searchFor string
 
-	searchFor       string
 	selectedProcess *process
 
 	mController interfaces.MenuController
 }
 
-func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Options) *Processes {
-	processes := &Processes{
-		LogsAddToList: logsFunc,
-		Processes:     []*process{},
-		scrollWindow:  scrollWindow{},
-		sortedBy:      sortByName,
+func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options) *ProcessesScene {
+	processes := &ProcessesScene{
+		Logs:         logsFunc,
+		processes:    []*process{},
+		sortedBy:     sortByName,
+		scrollWindow: scrollWindow{},
 	}
 
+	// this used to lock access to to change current page when typing is required.
 	if op.MenuController == nil {
-		panic("Missing Controls Pause")
+		panic("Missing Controls")
 	} else {
 		processes.mController = op.MenuController
 	}
 
-	processes.LogsAddToList("Reading processes...")
+	processes.Logs("Reading processes...")
 
-	go func(ctx context.Context, processes *Processes, op options.Options) {
+	go func(ctx context.Context, processes *ProcessesScene, op options.Options) {
 		ticker := time.NewTicker(time.Second * time.Duration(op.Interval))
 		defer ticker.Stop()
 
@@ -122,7 +117,7 @@ func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Optio
 				}
 
 				processes.mu.Lock()
-				processes.Processes = processes.Processes[:0] // reset list
+				processes.processes = processes.processes[:0] // reset list
 
 				counter := 1
 				for pid, p := range procs {
@@ -147,7 +142,7 @@ func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Optio
 					}
 
 					// --
-					processes.Processes = append(processes.Processes, &process{name, pid, cpuPercent})
+					processes.processes = append(processes.processes, &process{name, pid, cpuPercent})
 					counter++
 					// update baseline
 					prevProcCPU[pid] = curr
@@ -162,9 +157,9 @@ func Init(logsFunc controls.LogsAddToList, ctx context.Context, op options.Optio
 	return processes
 }
 
-func (p *Processes) Update(d float64) {}
+func (p *ProcessesScene) Update(d float64) {}
 
-func (p *Processes) Render(s interfaces.ScreenControl) {
+func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 	if p.search != nil {
 		p.search.Render(s)
 	}
@@ -172,9 +167,7 @@ func (p *Processes) Render(s interfaces.ScreenControl) {
 		p.kill.Render(s)
 	}
 
-	// important: used for the scrollable area where the processes are displayed
-	// must set both (end, max)
-	p.scrollWindow.updateArea(p, s)
+	p.scrollWindow.Render(p, s)
 
 	s.Color(color.White)
 	window.Text(s, screentui.P(1, 1), "Page: Running Processes") // title
@@ -184,7 +177,7 @@ func (p *Processes) Render(s interfaces.ScreenControl) {
 	startYPos := 4
 	window.Text(s,
 		screentui.P(float64(startXPos), float64(startYPos)),
-		fmt.Sprintf("Total Processes: %d | Displaying (%d - %d)", len(p.Processes),
+		fmt.Sprintf("Total Processes: %d | Displaying (%d - %d)", len(p.processes),
 			p.scrollWindow.start, p.scrollWindow.end,
 		),
 	)
@@ -197,7 +190,7 @@ func (p *Processes) Render(s interfaces.ScreenControl) {
 		[]string{"-------------", "-------------", "------------"},
 	)
 
-	if len(p.Processes) == 0 {
+	if len(p.processes) == 0 {
 		status := "Loading..."
 		if p.searchFor != "" {
 			status = "No Processes"
@@ -210,11 +203,11 @@ func (p *Processes) Render(s interfaces.ScreenControl) {
 	}
 
 	// sort processes by name default
-	sortProcesses(p.sortedBy, p.desc, p.Processes)
+	sortProcesses(p.sortedBy, p.desc, p.processes)
 
 	// displaying list of processes
 	currentProcessIndex := p.scrollWindow.currentIndex + startYPos + 3
-	for y, proc := range p.Processes[p.scrollWindow.start:p.scrollWindow.end] {
+	for y, proc := range p.processes[p.scrollWindow.start:p.scrollWindow.end] {
 		var name string
 		if currentProcessIndex == startYPos+y+3 {
 			name = fmt.Sprintf("[K] %s", proc.Name)
@@ -224,6 +217,7 @@ func (p *Processes) Render(s interfaces.ScreenControl) {
 			name = fmt.Sprintf("%s", proc.Name)
 			s.Color(color.White)
 		}
+
 		window.ListOfTextsWithPadding(s, screentui.P(float64(startXPos), float64(startYPos+y+3)), paddingBetweenText, []string{
 			name,
 			fmt.Sprintf("%d", proc.PID),
@@ -232,127 +226,45 @@ func (p *Processes) Render(s interfaces.ScreenControl) {
 	}
 }
 
-func (p *Processes) Events(ev tcell.Event) {
+func (p *ProcessesScene) Events(ev tcell.Event) {
 	// search processes events
 	if p.search != nil {
-		closeSearchWith := func(search string) {
-			p.scrollWindow.currentIndex = 0
-			p.searchFor = search
-			p.search = nil
-			p.mController.Unlock()
-		}
-		switch ev := ev.(type) {
-		case *tcell.EventKey:
-			switch ev.Str() {
-			case "/":
-				p.LogsAddToList("Search Canceled / Reset")
-				closeSearchWith("")
-				return
-			}
-			switch ev.Key() {
-			case tcell.KeyEnter:
-				p.LogsAddToList("Searching for: " + p.search.text)
-				closeSearchWith(p.search.text)
-				return
-			}
-		}
-		p.search.Events(ev)
+		p.search.Events(p, ev)
 		return
 	}
 
 	// kill a process events
 	if p.kill != nil {
-		close := func() {
-			p.kill = nil
-			p.mController.Unlock()
-			p.scrollWindow.currentIndex = 0
-		}
-		switch ev := ev.(type) {
-		case *tcell.EventKey:
-			switch ev.Str() {
-			case "/":
-				p.LogsAddToList("Canceled")
-				close()
-				return
-			}
-			switch ev.Key() {
-			case tcell.KeyEnter:
-				p.LogsAddToList("SIGTERM: " + p.selectedProcess.Name)
-				err := p.kill.SIGTERM()
-				if err != nil {
-					p.LogsAddToList(err.Error())
-				}
-				close()
-				return
-			}
-		}
+		p.kill.Events(p, ev)
 		return
 	}
 
+	// scroll window events
+	p.scrollWindow.Events(p, ev)
+
+	// processes events
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
-
-		if ev.Str() == "j" {
-			if p.scrollWindow.currentIndex < p.scrollWindow.max-1 &&
-				p.scrollWindow.start+p.scrollWindow.currentIndex < len(p.Processes)-1 {
-				p.scrollWindow.currentIndex++
-				return
-			}
-
-			// otherwise scroll window
-			if p.scrollWindow.end < len(p.Processes)-1 {
-				p.scrollWindow.start++
-				p.scrollWindow.end++
-			}
-		} else if ev.Str() == "k" {
-			if p.scrollWindow.currentIndex > 0 {
-				p.scrollWindow.currentIndex--
-				return
-			}
-
-			// otherwise scroll window up
-			if p.scrollWindow.start > 0 {
-				p.scrollWindow.start--
-				p.scrollWindow.end--
-			}
-		} else if ev.Str() == "T" {
-			p.sortedBy = NextSort(p.sortedBy)
-			p.LogsAddToList(fmt.Sprintf("Sorted By %s", p.sortedBy.String()))
+		if ev.Str() == "T" {
+			p.sortedBy = nextSort(p.sortedBy)
+			p.Logs(fmt.Sprintf("Sorted By %s", p.sortedBy.String()))
 		} else if ev.Str() == "t" {
 			p.desc = !p.desc
 			order := "Ascending"
 			if p.desc {
 				order = "Descending"
 			}
-			p.LogsAddToList("Order: " + order)
+			p.Logs("Order: " + order)
 		} else if ev.Str() == "/" {
 			p.mController.Lock()
 			p.search = &search{}
-			p.LogsAddToList("Search ON")
+			p.Logs("Search ON")
 		} else if ev.Str() == "K" {
 			p.mController.Lock()
 			p.kill = &kill{
 				process: p.selectedProcess,
 			}
-			p.LogsAddToList("Process Selected: " + p.selectedProcess.Name + " - Waiting action...")
+			p.Logs("Process Selected: " + p.selectedProcess.Name + " - Waiting action...")
 		}
-	}
-}
-
-func (sc *scrollWindow) updateArea(p *Processes, s interfaces.ScreenControl) {
-	_, h := s.Size()
-	// get the latest hight of the screen -
-	// used for the scrollable area in processes page
-	sc.max = h - PADDING_FOOTER
-
-	// this fix a problem when .start is at a position that > than what it
-	// its displayed. When searching, it might crash.
-	if sc.start > len(p.Processes) {
-		sc.start = 0
-	}
-
-	sc.end = sc.start + sc.max
-	if len(p.Processes) < sc.max {
-		sc.end = len(p.Processes)
 	}
 }

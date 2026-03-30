@@ -5,6 +5,7 @@ import (
 	"os"
 	"syscall"
 
+	"github.com/gdamore/tcell/v3"
 	"github.com/omar0ali/sysmontui/screentui"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
 	"github.com/omar0ali/sysmontui/screentui/window"
@@ -17,6 +18,33 @@ type kill struct {
 func (k *kill) Render(sc interfaces.ScreenControl) {
 	window.Text(sc, screentui.P(33, 1), "Name: "+k.process.Name+" PID: "+fmt.Sprint(k.process.PID))
 	window.Text(sc, screentui.P(33, 2), "[Enter] Kill - [/] Cancel")
+}
+
+func (k *kill) Events(p *ProcessesScene, ev tcell.Event) {
+	close := func() {
+		p.kill = nil
+		p.mController.Unlock()
+		p.scrollWindow.currentIndex = 0
+	}
+	switch ev := ev.(type) {
+	case *tcell.EventKey:
+		switch ev.Str() {
+		case "/":
+			p.Logs("Canceled")
+			close()
+			return
+		}
+		switch ev.Key() {
+		case tcell.KeyEnter:
+			p.Logs("SIGTERM: " + p.selectedProcess.Name)
+			err := p.kill.SIGTERM()
+			if err != nil {
+				p.Logs(err.Error())
+			}
+			close()
+			return
+		}
+	}
 }
 
 func (k *kill) SIGTERM() error {
