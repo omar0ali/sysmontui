@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"runtime"
 	"time"
 
@@ -25,6 +26,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			s.Exit()
+			log.Println("Fatal error:", r)
+		}
+	}()
 
 	// check if running linux
 	if runtime.GOOS != "linux" {

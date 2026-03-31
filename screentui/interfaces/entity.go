@@ -19,3 +19,10 @@ type MenuController interface {
 	Lock()
 	Unlock()
 }
+
+func MustMenuController(imc MenuController) MenuController {
+	if imc == nil {
+		panic("Missing Controls")
+	}
+	return imc
+}

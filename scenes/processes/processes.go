@@ -46,6 +46,7 @@ type ProcessesScene struct {
 }
 
 func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options) *ProcessesScene {
+
 	processes := &ProcessesScene{
 		Logs:         logsFunc,
 		processes:    []*process{},
@@ -54,11 +55,7 @@ func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options
 	}
 
 	// this used to lock access to to change current page when typing is required.
-	if op.MenuController == nil {
-		panic("Missing Controls")
-	} else {
-		processes.mController = op.MenuController
-	}
+	processes.mController = interfaces.MustMenuController(op.MenuController)
 
 	processes.Logs("Reading processes...")
 
