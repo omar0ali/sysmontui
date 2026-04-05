@@ -9,6 +9,7 @@ const (
 	sortByName sortBy = iota
 	sortByPID
 	sortByCPU
+	sortByMEM
 )
 
 func sortProcesses(sortType sortBy, desc bool, processes []*process) {
@@ -24,6 +25,10 @@ func sortProcesses(sortType sortBy, desc bool, processes []*process) {
 	case sortByCPU:
 		less = func(i, j int) bool {
 			return processes[i].CPUPercent < processes[j].CPUPercent
+		}
+	case sortByMEM:
+		less = func(i, j int) bool {
+			return processes[i].MEMUsage < processes[j].MEMUsage
 		}
 	}
 
@@ -41,6 +46,8 @@ func (s sortBy) String() string {
 		return "PID"
 	case sortByCPU:
 		return "CPU"
+	case sortByMEM:
+		return "MEM"
 	default:
 		return "Name"
 	}
@@ -52,6 +59,9 @@ func nextSort(by sortBy) sortBy {
 	}
 	if by == sortByPID {
 		return sortByCPU
+	}
+	if by == sortByCPU {
+		return sortByMEM
 	}
 	return sortByName
 }
