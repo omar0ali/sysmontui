@@ -21,6 +21,7 @@ type process struct {
 	Name       string
 	PID        int
 	CPUPercent float64
+	MEMUsage   uint64
 }
 
 type ProcessesScene struct {
@@ -130,6 +131,8 @@ func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options
 
 					cpuPercent := float64(procDelta) / float64(totalDelta) * 100
 
+					memUsage := p.Status.VmRSS / 1024 // to get MB
+
 					// -- apply search
 					name := strings.ToLower(p.Stat.Comm)
 					search := strings.TrimSpace(strings.ToLower(processes.searchFor))
@@ -139,7 +142,7 @@ func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options
 					}
 
 					// --
-					processes.processes = append(processes.processes, &process{name, pid, cpuPercent})
+					processes.processes = append(processes.processes, &process{name, pid, cpuPercent, memUsage})
 					counter++
 					// update baseline
 					prevProcCPU[pid] = curr
@@ -169,7 +172,7 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 	s.Color(color.White)
 	window.Text(s, screentui.P(1, 1), "Page: Running Processes") // title
 
-	paddingBetweenText := 30
+	paddingBetweenText := 25
 	startXPos := 32
 	startYPos := 4
 	window.Text(s,
@@ -180,11 +183,11 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 	)
 
 	window.ListOfTextsWithPadding(s, screentui.P(float64(startXPos), float64(startYPos+1)), paddingBetweenText,
-		[]string{"Name", "PID", "CPU"},
+		[]string{"Name", "PID", "CPU", "MemB"},
 	)
 
 	window.ListOfTextsWithPadding(s, screentui.P(float64(startXPos), float64(startYPos+2)), paddingBetweenText,
-		[]string{"-------------", "-------------", "------------"},
+		[]string{"-------------", "-------------", "------------", "------------"},
 	)
 
 	if len(p.processes) == 0 {
@@ -203,10 +206,10 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 	sortProcesses(p.sortedBy, p.desc, p.processes)
 
 	// displaying list of processes
-	currentProcessIndex := p.scrollWindow.currentIndex + startYPos + 3
+	startProcessIndex := p.scrollWindow.currentIndex + startYPos + 3
 	for y, proc := range p.processes[p.scrollWindow.start:p.scrollWindow.end] {
 		var name string
-		if currentProcessIndex == startYPos+y+3 {
+		if startProcessIndex == startYPos+y+3 {
 			name = fmt.Sprintf("[K] %s", proc.Name)
 			p.selectedProcess = proc
 			s.Color(color.YellowGreen)
@@ -219,6 +222,7 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 			name,
 			fmt.Sprintf("%d", proc.PID),
 			fmt.Sprintf("%.2f%%", proc.CPUPercent),
+			fmt.Sprintf("%d MB", proc.MEMUsage),
 		})
 	}
 }
