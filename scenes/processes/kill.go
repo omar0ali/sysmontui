@@ -6,6 +6,8 @@ import (
 	"syscall"
 
 	"github.com/gdamore/tcell/v3"
+	"github.com/gdamore/tcell/v3/color"
+	"github.com/omar0ali/sysmontui/scenes/perm/effects"
 	"github.com/omar0ali/sysmontui/screentui"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
 	"github.com/omar0ali/sysmontui/screentui/window"
@@ -16,8 +18,11 @@ type kill struct {
 }
 
 func (k *kill) Render(sc interfaces.ScreenControl) {
+	sc.Color(color.Red)
+	window.Text(sc, screentui.P(33, 0), string(effects.Spinner(9, 500)))
+	sc.DefaultColor()
 	window.Text(sc, screentui.P(33, 1), "Name: "+k.process.Name+" PID: "+fmt.Sprint(k.process.PID))
-	window.Text(sc, screentui.P(33, 2), "[Enter] Kill - [/] Cancel")
+	window.Text(sc, screentui.P(33, 2), "[Enter] Kill - [/, q] Cancel")
 }
 
 func (k *kill) Events(p *ProcessesScene, ev tcell.Event) {
@@ -29,7 +34,7 @@ func (k *kill) Events(p *ProcessesScene, ev tcell.Event) {
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
 		switch ev.Str() {
-		case "/":
+		case "/", "q":
 			p.Logs("Canceled")
 			close()
 			return

@@ -12,6 +12,7 @@ import (
 	"github.com/omar0ali/sysmon/pkg"
 	"github.com/omar0ali/sysmontui/scenes/options"
 	"github.com/omar0ali/sysmontui/scenes/perm/controls"
+	"github.com/omar0ali/sysmontui/scenes/perm/effects"
 	"github.com/omar0ali/sysmontui/screentui"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
 	"github.com/omar0ali/sysmontui/screentui/window"
@@ -191,7 +192,7 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 	)
 
 	if len(p.processes) == 0 {
-		status := "Loading..."
+		status := "Loading " + string(effects.Spinner(7, 150))
 		if p.searchFor != "" {
 			status = "No Processes"
 		}
@@ -215,7 +216,7 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 			s.Color(color.YellowGreen)
 		} else {
 			name = fmt.Sprintf("%s", proc.Name)
-			s.Color(color.White)
+			s.DefaultColor()
 		}
 
 		window.ListOfTextsWithPadding(s, screentui.P(float64(startXPos), float64(startYPos+y+3)), paddingBetweenText, []string{
@@ -261,6 +262,10 @@ func (p *ProcessesScene) Events(ev tcell.Event) {
 			p.search = &search{}
 			p.Logs("Search ON")
 		} else if ev.Str() == "K" {
+			if len(p.processes) < 1 {
+				p.Logs("Cannot perform this action now.")
+				return
+			}
 			p.mController.Lock()
 			p.kill = &kill{
 				process: p.selectedProcess,

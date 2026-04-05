@@ -128,6 +128,10 @@ func (s *screen) Color(styleColor color.Color) {
 	s.style = tcell.StyleDefault.Foreground(styleColor).Background(tcell.ColorReset)
 }
 
+func (s *screen) DefaultColor() {
+	s.Color(color.White)
+}
+
 func (s *screen) SetContent(x, y int, r rune) {
 	s.screen.SetContent(x, y, r, nil, s.style)
 }
