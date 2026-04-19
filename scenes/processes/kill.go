@@ -21,6 +21,7 @@ func (k *kill) Render(sc interfaces.ScreenControl) {
 	sc.Color(color.Red)
 	window.Text(sc, screentui.P(33, 0), string(effects.Spinner(9, 500)))
 	sc.DefaultColor()
+	window.Text(sc, screentui.P(35, 0), "Are you sure?")
 	window.Text(sc, screentui.P(33, 1), "Name: "+k.process.Name+" PID: "+fmt.Sprint(k.process.PID))
 	window.Text(sc, screentui.P(33, 2), "[Enter] Kill - [/, q] Cancel")
 }

@@ -65,7 +65,10 @@ func main() {
 	entities.AddEntity("0", home.Init())
 	entities.AddEntity("1", meminfo.Init(logsFunc, ctx, options.Options{Interval: 2}))
 	entities.AddEntity("2", cpustat.Init(logsFunc, ctx, options.Options{Interval: 2}))
-	entities.AddEntity("3", processes.Init(logsFunc, ctx, options.Options{Interval: 3, MenuController: control}))
+	entities.AddEntity("3", processes.Init(logsFunc, ctx, options.Options{
+		Interval:       3,
+		MenuController: control,
+	}))
 
 	entities.SetScene("0") // set current scene to be displayed / rendered
 

@@ -18,14 +18,15 @@ func (s *search) Render(sc interfaces.ScreenControl) {
 	if (time.Now().UnixMilli()/500)%2 == 1 {
 		txt += string(tcell.RuneBlock)
 	}
-	window.Text(sc, screentui.P(33, 1), "Search: "+txt)
+	window.Text(sc, screentui.P(33, 0), "Filter")
+	window.Text(sc, screentui.P(33, 1), txt)
 	window.Text(sc, screentui.P(33, 2), "[Enter] Search - [/, q] Cancel | Reset")
 }
 
 func (s *search) Events(p *ProcessesScene, ev tcell.Event) {
 	closeSearchWith := func(search string) {
 		p.scrollWindow.currentIndex = 0
-		p.searchFor = search
+		p.strSearch = search
 		p.search = nil
 		p.mController.Unlock()
 	}

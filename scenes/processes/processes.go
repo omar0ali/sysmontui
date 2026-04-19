@@ -35,12 +35,11 @@ type ProcessesScene struct {
 
 	// order
 	sortedBy sortBy
-	desc     bool
 
 	// actions
+	strSearch string
 	search    *search
 	kill      *kill
-	searchFor string
 
 	selectedProcess *process
 
@@ -136,7 +135,7 @@ func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options
 
 					// -- apply search
 					name := strings.ToLower(p.Stat.Comm)
-					search := strings.TrimSpace(strings.ToLower(processes.searchFor))
+					search := strings.TrimSpace(strings.ToLower(processes.strSearch))
 
 					if search != "" && !strings.Contains(name, search) {
 						continue
@@ -193,7 +192,7 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 
 	if len(p.processes) == 0 {
 		status := "Loading " + string(effects.Spinner(7, 150))
-		if p.searchFor != "" {
+		if p.strSearch != "" {
 			status = "No Processes"
 		}
 		window.Text(s,
@@ -204,7 +203,7 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 	}
 
 	// sort processes by name default
-	sortProcesses(p.sortedBy, p.desc, p.processes)
+	sortProcesses(p.sortedBy, p.processes)
 
 	// displaying list of processes
 	startProcessIndex := p.scrollWindow.currentIndex + startYPos + 3
@@ -251,10 +250,12 @@ func (p *ProcessesScene) Events(ev tcell.Event) {
 			p.sortedBy = nextSort(p.sortedBy)
 			p.Logs(fmt.Sprintf("Sorted By %s", p.sortedBy.String()))
 		} else if ev.Str() == "t" {
-			p.desc = !p.desc
-			order := "Ascending"
-			if p.desc {
+			var order string
+			if toggleDesc() {
 				order = "Descending"
+			} else {
+				order = "Ascending"
+
 			}
 			p.Logs("Order: " + order)
 		} else if ev.Str() == "/" {
@@ -271,6 +272,14 @@ func (p *ProcessesScene) Events(ev tcell.Event) {
 				process: p.selectedProcess,
 			}
 			p.Logs("Process Selected: " + p.selectedProcess.Name + " - Waiting action...")
+		} else if ev.Str() == "q" {
+			// clear / reset current invoked search
+			p.scrollWindow.currentIndex = 0
+			if p.strSearch != "" {
+				p.Logs("Search cleared...")
+				p.strSearch = ""
+			}
+			p.mController.Unlock()
 		}
 	}
 }

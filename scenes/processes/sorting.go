@@ -5,6 +5,10 @@ import "sort"
 // sorting processes
 type sortBy int
 
+var (
+	desc bool
+)
+
 const (
 	sortByName sortBy = iota
 	sortByPID
@@ -12,7 +16,12 @@ const (
 	sortByMEM
 )
 
-func sortProcesses(sortType sortBy, desc bool, processes []*process) {
+func toggleDesc() bool {
+	desc = !desc
+	return desc
+}
+
+func sortProcesses(sortType sortBy, processes []*process) {
 	less := func(i, j int) bool {
 		return processes[i].Name < processes[j].Name
 	}
