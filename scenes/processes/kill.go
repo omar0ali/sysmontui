@@ -42,6 +42,7 @@ func (k *kill) Events(p *ProcessesScene, ev tcell.Event) {
 		}
 		switch ev.Key() {
 		case tcell.KeyEnter:
+			isLoading = true
 			p.Logs("SIGTERM: " + p.selectedProcess.Name)
 			err := p.kill.SIGTERM()
 			if err != nil {

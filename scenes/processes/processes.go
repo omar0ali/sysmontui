@@ -25,6 +25,11 @@ type process struct {
 	MEMUsage   uint64
 }
 
+var (
+	status    string
+	isLoading = true
+)
+
 type ProcessesScene struct {
 	mu sync.RWMutex
 
@@ -74,6 +79,7 @@ func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options
 				return
 
 			case <-ticker.C:
+
 				pids, err := pkg.GetPids()
 				if err != nil {
 					continue
@@ -151,13 +157,20 @@ func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options
 
 				prevCPU = currCPU
 			}
+			// disable loading when done. // status will show 'No Processes' if the list is empty
+			isLoading = false
 		}
 	}(ctx, processes, op)
 
 	return processes
 }
 
-func (p *ProcessesScene) Update(d float64) {}
+func (p *ProcessesScene) Update(d float64) {
+	// update status | only if its true
+	if isLoading {
+		p.processes = p.processes[:0]
+	}
+}
 
 func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 	if p.search != nil {
@@ -190,9 +203,11 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 		[]string{"-------------", "-------------", "------------", "------------"},
 	)
 
+	// displaying status on screen
 	if len(p.processes) == 0 {
-		status := "Loading " + string(effects.Spinner(7, 150))
-		if p.strSearch != "" {
+		if isLoading {
+			status = "Loading " + string(effects.Spinner(7, 150))
+		} else {
 			status = "No Processes"
 		}
 		window.Text(s,
@@ -274,6 +289,7 @@ func (p *ProcessesScene) Events(ev tcell.Event) {
 			p.Logs("Process Selected: " + p.selectedProcess.Name + " - Waiting action...")
 		} else if ev.Str() == "q" {
 			// clear / reset current invoked search
+			isLoading = true
 			p.scrollWindow.currentIndex = 0
 			if p.strSearch != "" {
 				p.Logs("Search cleared...")

@@ -34,12 +34,16 @@ func (s *search) Events(p *ProcessesScene, ev tcell.Event) {
 	case *tcell.EventKey:
 		switch ev.Str() {
 		case "/", "q":
+			if p.strSearch != "" {
+				isLoading = true
+			}
 			p.Logs("Search Canceled / Reset")
 			closeSearchWith("")
 			return
 		}
 		switch ev.Key() {
 		case tcell.KeyEnter:
+			isLoading = true
 			p.Logs("Searching for: " + p.search.text)
 			closeSearchWith(p.search.text)
 			return
