@@ -25,11 +25,6 @@ type process struct {
 	MEMUsage   uint64
 }
 
-var (
-	status    string
-	isLoading = true
-)
-
 type ProcessesScene struct {
 	mu sync.RWMutex
 
@@ -42,9 +37,9 @@ type ProcessesScene struct {
 	sortedBy sortBy
 
 	// actions
-	strSearch string
-	search    *search
-	kill      *kill
+	searchState *SearchState
+	search      *search
+	kill        *kill
 
 	selectedProcess *process
 
@@ -58,6 +53,9 @@ func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options
 		processes:    []*process{},
 		sortedBy:     sortByName,
 		scrollWindow: scrollWindow{},
+		searchState: &SearchState{
+			isLoading: true,
+		},
 	}
 
 	// this used to lock access to to change current page when typing is required.
@@ -141,7 +139,7 @@ func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options
 
 					// -- apply search
 					name := strings.ToLower(p.Stat.Comm)
-					search := strings.TrimSpace(strings.ToLower(processes.strSearch))
+					search := strings.TrimSpace(strings.ToLower(processes.searchState.strSearch))
 
 					if search != "" && !strings.Contains(name, search) {
 						continue
@@ -158,7 +156,7 @@ func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options
 				prevCPU = currCPU
 			}
 			// disable loading when done. // status will show 'No Processes' if the list is empty
-			isLoading = false
+			processes.searchState.isLoading = false
 		}
 	}(ctx, processes, op)
 
@@ -167,7 +165,7 @@ func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options
 
 func (p *ProcessesScene) Update(d float64) {
 	// update status | only if its true
-	if isLoading {
+	if p.searchState.isLoading {
 		p.processes = p.processes[:0]
 	}
 }
@@ -205,14 +203,14 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 
 	// displaying status on screen
 	if len(p.processes) == 0 {
-		if isLoading {
-			status = "Loading " + string(effects.Spinner(7, 150))
+		if p.searchState.isLoading {
+			p.searchState.status = "Loading " + string(effects.Spinner(7, 150))
 		} else {
-			status = "No Processes"
+			p.searchState.status = "No Processes"
 		}
 		window.Text(s,
 			screentui.P(float64(startXPos), float64(startYPos+3)),
-			status,
+			p.searchState.status,
 		)
 		return
 	}
@@ -289,11 +287,11 @@ func (p *ProcessesScene) Events(ev tcell.Event) {
 			p.Logs("Process Selected: " + p.selectedProcess.Name + " - Waiting action...")
 		} else if ev.Str() == "q" {
 			// clear / reset current invoked search
-			isLoading = true
-			p.scrollWindow.currentIndex = 0
-			if p.strSearch != "" {
+			if p.searchState.strSearch != "" {
+				p.searchState.isLoading = true
+				p.scrollWindow.currentIndex = 0
 				p.Logs("Search cleared...")
-				p.strSearch = ""
+				p.searchState.strSearch = ""
 			}
 			p.mController.Unlock()
 		}

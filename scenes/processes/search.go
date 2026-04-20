@@ -9,6 +9,12 @@ import (
 	"github.com/omar0ali/sysmontui/screentui/window"
 )
 
+type SearchState struct {
+	strSearch string
+	status    string
+	isLoading bool
+}
+
 type search struct {
 	text string
 }
@@ -18,15 +24,15 @@ func (s *search) Render(sc interfaces.ScreenControl) {
 	if (time.Now().UnixMilli()/500)%2 == 1 {
 		txt += string(tcell.RuneBlock)
 	}
-	window.Text(sc, screentui.P(33, 0), "Filter")
-	window.Text(sc, screentui.P(33, 1), txt)
-	window.Text(sc, screentui.P(33, 2), "[Enter] Search - [/, q] Cancel | Reset")
+	window.Text(sc, screentui.P(32, 0), "Filter")
+	window.Text(sc, screentui.P(32, 1), txt)
+	window.Text(sc, screentui.P(32, 2), "[Enter] Search - [/, q] Cancel | Reset")
 }
 
 func (s *search) Events(p *ProcessesScene, ev tcell.Event) {
 	closeSearchWith := func(search string) {
 		p.scrollWindow.currentIndex = 0
-		p.strSearch = search
+		p.searchState.strSearch = search
 		p.search = nil
 		p.mController.Unlock()
 	}
@@ -34,8 +40,8 @@ func (s *search) Events(p *ProcessesScene, ev tcell.Event) {
 	case *tcell.EventKey:
 		switch ev.Str() {
 		case "/", "q":
-			if p.strSearch != "" {
-				isLoading = true
+			if p.searchState.strSearch != "" {
+				p.searchState.isLoading = true
 			}
 			p.Logs("Search Canceled / Reset")
 			closeSearchWith("")
@@ -43,7 +49,7 @@ func (s *search) Events(p *ProcessesScene, ev tcell.Event) {
 		}
 		switch ev.Key() {
 		case tcell.KeyEnter:
-			isLoading = true
+			p.searchState.isLoading = true
 			p.Logs("Searching for: " + p.search.text)
 			closeSearchWith(p.search.text)
 			return

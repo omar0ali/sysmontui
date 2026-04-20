@@ -23,19 +23,25 @@ type Controls struct {
 
 func Init(s interfaces.SceneControl) *Controls {
 	listOfControls := []string{
-		"[0] Home",
 		"[1] Memory Info",
 		"[2] CPU Status",
 		"[3] Running Processes",
 		"[ESC] Exit",
 	}
+
 	controls := &Controls{
 		listOfControls:   listOfControls,
 		defaultListLimit: len(listOfControls),
 		sceneControl:     s,
 	}
 
-	controls.LogsAddToList("Home Page")
+	// Memory View / Page
+	// Additional menu
+	controls.MenuAddToList("-------------------")
+	controls.MenuAddToList("[T] Toggle (MB, GB)")
+
+	// Logs
+	controls.LogsAddToList("Memory View")
 
 	return controls
 }
@@ -71,11 +77,9 @@ func (c *Controls) Render(s interfaces.ScreenControl) {
 	// list of controls options
 	startY := 4
 	for y, text := range c.listOfControls {
-		s.Color(color.White)
-		if c.sceneControl.GetScene() == fmt.Sprintf("%d", y) {
+		s.Color(color.White)                                     // default color
+		if c.sceneControl.GetScene() == fmt.Sprintf("%d", y+1) { // starting from 1
 			s.Color(color.YellowGreen)
-			window.Text(s, screentui.P(2, float64(startY+y)), text)
-			continue
 		}
 		window.Text(s, screentui.P(2, float64(startY+y)), text)
 	}
@@ -100,28 +104,24 @@ func (c *Controls) Events(ev tcell.Event) {
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
 		s := ev.Str()
-		if len(s) == 1 && s[0] >= '0' && s[0] <= '3' {
+		if len(s) == 1 && s[0] >= '1' && s[0] <= '3' {
 			c.MenuResetList()
 
 			page := int(s[0] - '0')
 			switch page {
-			case 0:
-				if c.sceneControl.SetScene("0") {
-					c.LogsAddToList("Home Page")
-				}
 			case 1:
 				if c.sceneControl.SetScene("1") {
-					c.LogsAddToList("Memory Page")
+					c.LogsAddToList("Memory View")
 				}
 				c.MenuAddToList("-------------------")
 				c.MenuAddToList("[T] Toggle (MB, GB)")
 			case 2:
 				if c.sceneControl.SetScene("2") {
-					c.LogsAddToList("CPU Status Page")
+					c.LogsAddToList("CPU Status View")
 				}
 			case 3:
 				if c.sceneControl.SetScene("3") {
-					c.LogsAddToList("Running Processes Page")
+					c.LogsAddToList("Running Processes View")
 				}
 				c.MenuAddToList("-------------------")
 				c.MenuAddToList("[j] Scroll Up")

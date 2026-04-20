@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/omar0ali/sysmontui/scenes/cpustat"
-	"github.com/omar0ali/sysmontui/scenes/home"
 	"github.com/omar0ali/sysmontui/scenes/meminfo"
 	"github.com/omar0ali/sysmontui/scenes/options"
 	"github.com/omar0ali/sysmontui/scenes/perm/controls"
@@ -62,7 +61,7 @@ func main() {
 	logsFunc := control.LogsAddToList
 
 	// non perm scenes
-	entities.AddEntity("0", home.Init())
+	// entities.AddEntity("0", home.Init()) // removed
 	entities.AddEntity("1", meminfo.Init(logsFunc, ctx, options.Options{Interval: 2}))
 	entities.AddEntity("2", cpustat.Init(logsFunc, ctx, options.Options{Interval: 2}))
 	entities.AddEntity("3", processes.Init(logsFunc, ctx, options.Options{
@@ -70,7 +69,7 @@ func main() {
 		MenuController: control,
 	}))
 
-	entities.SetScene("0") // set current scene to be displayed / rendered
+	entities.SetScene("1") // set current scene to be displayed / rendered
 
 	s.Run(entities, cancel) // run
 }

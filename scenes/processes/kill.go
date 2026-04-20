@@ -19,11 +19,11 @@ type kill struct {
 
 func (k *kill) Render(sc interfaces.ScreenControl) {
 	sc.Color(color.Red)
-	window.Text(sc, screentui.P(33, 0), string(effects.Spinner(9, 500)))
+	window.Text(sc, screentui.P(32, 0), string(effects.Spinner(9, 500)))
 	sc.DefaultColor()
-	window.Text(sc, screentui.P(35, 0), "Are you sure?")
-	window.Text(sc, screentui.P(33, 1), "Name: "+k.process.Name+" PID: "+fmt.Sprint(k.process.PID))
-	window.Text(sc, screentui.P(33, 2), "[Enter] Kill - [/, q] Cancel")
+	window.Text(sc, screentui.P(34, 0), "Are you sure?")
+	window.Text(sc, screentui.P(32, 1), "Name: "+k.process.Name+" PID: "+fmt.Sprint(k.process.PID))
+	window.Text(sc, screentui.P(32, 2), "[Enter] Kill - [/, q] Cancel")
 }
 
 func (k *kill) Events(p *ProcessesScene, ev tcell.Event) {
@@ -42,7 +42,7 @@ func (k *kill) Events(p *ProcessesScene, ev tcell.Event) {
 		}
 		switch ev.Key() {
 		case tcell.KeyEnter:
-			isLoading = true
+			p.searchState.isLoading = true
 			p.Logs("SIGTERM: " + p.selectedProcess.Name)
 			err := p.kill.SIGTERM()
 			if err != nil {
