@@ -5,14 +5,13 @@ import (
 
 	"github.com/gdamore/tcell/v3"
 	"github.com/gdamore/tcell/v3/color"
+	"github.com/omar0ali/sysmontui/scenes/processes/layout"
 	"github.com/omar0ali/sysmontui/screentui"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
 	"github.com/omar0ali/sysmontui/screentui/window"
 )
 
 type LogsControl func(string)
-
-var ShowLogs bool
 
 type Controls struct {
 	defaultListLimit int
@@ -37,7 +36,7 @@ func Init(s interfaces.SceneControl) *Controls {
 		sceneControl:     s,
 	}
 
-	ShowLogs = true
+	layout.ShowLogs = true
 
 	// start with :
 	// Memory View / Page
@@ -92,13 +91,16 @@ func (c *Controls) Render(s interfaces.ScreenControl) {
 	}
 
 	// show | hide logs
-	if !ShowLogs {
+	if !layout.ShowLogs {
+		// footer line for logs
+		window.LineHorizontalWithStartAndEnd(s, 31, w, h-5, tcell.RuneHLine) // for ui
+		window.Text(s, screentui.P(33, float64(h)-4), "Logs | [l] Show Logs")
 		return
 	}
 
 	// footer line for logs
 	window.LineHorizontalWithStartAndEnd(s, 31, w, h-15, tcell.RuneHLine) // for ui
-	window.Text(s, screentui.P(33, float64(h)-14), "-- Logs -- | [l] Show/Hide Logs")
+	window.Text(s, screentui.P(33, float64(h)-14), "Logs | [l] Hide Logs")
 	window.LineHorizontalWithStartAndEnd(s, 31, w, h-13, tcell.RuneHLine) // for ui
 
 	startY = h - 12
@@ -118,7 +120,7 @@ func (c *Controls) Events(ev tcell.Event) {
 	case *tcell.EventKey:
 		s := ev.Str()
 		if s == "l" {
-			ShowLogs = !ShowLogs
+			layout.ShowLogs = !layout.ShowLogs
 		}
 		if len(s) == 1 && s[0] >= '1' && s[0] <= '3' {
 			c.MenuResetList()

@@ -16,7 +16,6 @@
 - [x] Search processes by name
 - [x] Kill process
 - [X] Show and Hide logs using `[l]` key
-- [ ] UI Polishing & Clean up
 
 ### Requirements
 Linux only (uses /proc)

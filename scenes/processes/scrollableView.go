@@ -2,18 +2,12 @@ package processes
 
 import (
 	"github.com/gdamore/tcell/v3"
-	"github.com/omar0ali/sysmontui/scenes/perm/controls"
+	"github.com/omar0ali/sysmontui/scenes/processes/layout"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
 )
 
-const SCROLL_FULL_PADDING = 22
-const SCROLL_DISABLE_PADDING = 10
-
 type scrollWindow struct {
 	start, end, max, currentIndex int
-
-	// padding setting to display logs
-	paddingFooter int
 }
 
 func (sc *scrollWindow) Events(p *ProcessesScene, ev tcell.Event) {
@@ -59,15 +53,16 @@ func (sc *scrollWindow) Render(p *ProcessesScene, s interfaces.ScreenControl) {
 
 	_, h := s.Size()
 
-	if controls.ShowLogs {
-		sc.paddingFooter = SCROLL_FULL_PADDING
+	var paddingFooter int
+	if layout.ShowLogs {
+		paddingFooter = layout.LOGS_PADDING
 	} else {
-		sc.paddingFooter = SCROLL_DISABLE_PADDING
+		paddingFooter = layout.LOGS_NO_PADDING
 	}
 
 	// get the latest hight of the screen -
 	// used for the scrollable area in processes page
-	sc.max = h - sc.paddingFooter
+	sc.max = h - paddingFooter
 
 	// this fix a problem when .start is at a position that > than what it
 	// its displayed. When searching, it might crash.

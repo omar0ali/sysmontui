@@ -185,13 +185,19 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 	s.Color(color.White)
 	window.Text(s, screentui.P(1, 1), "Page: Running Processes") // title
 
+	searchON := ""
+
+	if p.searchState.strSearch != "" {
+		searchON = "| [q] to reset search"
+	}
+
 	paddingBetweenText := 25
 	startXPos := 32
 	startYPos := 4
 	window.Text(s,
 		screentui.P(float64(startXPos), float64(startYPos)),
-		fmt.Sprintf("Total Processes: %d | Displaying (%d - %d)", len(p.processes),
-			p.scrollWindow.start, p.scrollWindow.end,
+		fmt.Sprintf("Total Processes: %d | Displaying (%d - %d) %s", len(p.processes),
+			p.scrollWindow.start, p.scrollWindow.end, searchON,
 		),
 	)
 
