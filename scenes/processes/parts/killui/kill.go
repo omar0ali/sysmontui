@@ -1,4 +1,4 @@
-package processes
+package killui
 
 import (
 	"fmt"
@@ -7,59 +7,58 @@ import (
 
 	"github.com/gdamore/tcell/v3"
 	"github.com/gdamore/tcell/v3/color"
+	"github.com/omar0ali/sysmontui/scenes"
 	"github.com/omar0ali/sysmontui/scenes/perm/effects"
+	"github.com/omar0ali/sysmontui/scenes/processes"
+	"github.com/omar0ali/sysmontui/scenes/processes/parts"
 	"github.com/omar0ali/sysmontui/screentui"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
 	"github.com/omar0ali/sysmontui/screentui/window"
 )
 
-type kill struct {
-	process *process
+type Kill struct {
+	Process *processes.Process
 }
 
-func (k *kill) Render(sc interfaces.ScreenControl) {
+func (k *Kill) Render(sc interfaces.ScreenControl) {
 	sc.Color(color.Red)
 	window.Text(sc, screentui.P(32, 0), string(effects.Spinner(9, 500)))
 	sc.DefaultColor()
 	window.Text(sc, screentui.P(34, 0), "Are you sure?")
-	window.Text(sc, screentui.P(32, 1), "Name: "+k.process.Name+" PID: "+fmt.Sprint(k.process.PID))
+	window.Text(sc, screentui.P(32, 1), "Name: "+k.Process.Name+" PID: "+fmt.Sprint(k.Process.PID))
 	window.Text(sc, screentui.P(32, 2), "[Enter] Kill - [/, q] Cancel")
 }
 
-func (k *kill) Events(p *ProcessesScene, ev tcell.Event) {
-	close := func() {
-		p.kill = nil
-		p.mController.Unlock()
-		p.scrollWindow.currentIndex = 0
-	}
+func (k *Kill) Events(c parts.KillController, ev tcell.Event) {
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
 		switch ev.Str() {
 		case "/", "q":
-			p.Logs("Canceled")
-			close()
+			scenes.Log("Canceled")
+			c.CloseingKillUI()
 			return
 		}
 		switch ev.Key() {
 		case tcell.KeyEnter:
-			p.searchState.isLoading = true
-			p.Logs("SIGTERM: " + p.selectedProcess.Name)
-			err := p.kill.SIGTERM()
+			c.SetLoading()
+			scenes.Log("SIGTERM: " + k.Process.Name)
+			err := k.SIGTERM()
 			if err != nil {
-				p.Logs(err.Error())
+				scenes.Log(err.Error())
+				c.CloseingKillUI()
 			}
-			close()
+			c.CloseingKillUI()
 			return
 		}
 	}
 }
 
-func (k *kill) SIGTERM() error {
-	if k.process == nil {
+func (k *Kill) SIGTERM() error {
+	if k.Process == nil {
 		return fmt.Errorf("Error: pid not set.")
 	}
 	// find process
-	process, err := os.FindProcess(k.process.PID)
+	process, err := os.FindProcess(k.Process.PID)
 	if err != nil {
 		return fmt.Errorf("can't find the process: %s", err)
 	}

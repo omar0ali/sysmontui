@@ -1,6 +1,10 @@
-package processes
+package pScene
 
-import "sort"
+import (
+	"sort"
+
+	"github.com/omar0ali/sysmontui/scenes/processes"
+)
 
 // sorting processes
 type sortBy int
@@ -21,7 +25,7 @@ func toggleDesc() bool {
 	return desc
 }
 
-func sortProcesses(sortType sortBy, processes []*process) {
+func sortProcesses(sortType sortBy, processes []*processes.Process) {
 	less := func(i, j int) bool {
 		return processes[i].Name < processes[j].Name
 	}

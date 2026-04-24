@@ -10,29 +10,27 @@ import (
 	"github.com/gdamore/tcell/v3"
 	"github.com/gdamore/tcell/v3/color"
 	"github.com/omar0ali/sysmon/pkg"
+	"github.com/omar0ali/sysmontui/scenes"
 	"github.com/omar0ali/sysmontui/scenes/options"
-	"github.com/omar0ali/sysmontui/scenes/perm/controls"
 	"github.com/omar0ali/sysmontui/screentui"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
 	"github.com/omar0ali/sysmontui/screentui/window"
 )
 
 type MemInfo struct {
-	meminfo       *pkg.MemInfo
-	mu            sync.RWMutex
-	unit          pkg.Unit
-	unitStr       string
-	LogsAddToList controls.LogsControl
+	meminfo *pkg.MemInfo
+	mu      sync.RWMutex
+	unit    pkg.Unit
+	unitStr string
 }
 
-func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options) *MemInfo {
+func Init(ctx context.Context, op options.Options) *MemInfo {
 	meminfo := &MemInfo{
-		unit:          pkg.MB,
-		unitStr:       "MB",
-		LogsAddToList: logsFunc,
+		unit:    pkg.MB,
+		unitStr: "MB",
 	}
 
-	meminfo.LogsAddToList("Read memory info...")
+	scenes.Log("Read memory info...")
 
 	// important to init info to avoid nil
 	if info, err := pkg.ReadMemInfo(meminfo.unit); err == nil {
@@ -118,11 +116,11 @@ func (m *MemInfo) Events(ev tcell.Event) {
 			if m.unit == pkg.MB {
 				m.unit = pkg.GB
 				m.unitStr = "GB"
-				m.LogsAddToList("Toggle to GB")
+				scenes.Log("Toggle to GB")
 			} else {
 				m.unit = pkg.MB
 				m.unitStr = "MB"
-				m.LogsAddToList("Toggle to MB")
+				scenes.Log("Toggle to MB")
 			}
 		}
 	}

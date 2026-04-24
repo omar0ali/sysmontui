@@ -7,12 +7,13 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/omar0ali/sysmontui/scenes"
 	"github.com/omar0ali/sysmontui/scenes/cpustat"
 	"github.com/omar0ali/sysmontui/scenes/meminfo"
 	"github.com/omar0ali/sysmontui/scenes/options"
 	"github.com/omar0ali/sysmontui/scenes/perm/controls"
 	"github.com/omar0ali/sysmontui/scenes/perm/cpuinfo"
-	"github.com/omar0ali/sysmontui/scenes/processes"
+	"github.com/omar0ali/sysmontui/scenes/processes/pScene"
 	"github.com/omar0ali/sysmontui/screentui/entity"
 	"github.com/omar0ali/sysmontui/screentui/window"
 )
@@ -20,7 +21,8 @@ import (
 func main() {
 	// setup
 	s, err := window.New(&window.ScreenOption{
-		Ticker: time.Second / 5,
+		Ticker: time.Second / 10,
+		// ShowFPS: true,
 	})
 
 	if err != nil {
@@ -59,13 +61,13 @@ func main() {
 	)[0]
 
 	// logs func can be used anywhere, when its required
-	logsFunc := control.LogsAddToList
+	scenes.SetLogger(control.LogsAddToList)
 
 	// non perm scenes
 	// entities.AddEntity("0", home.Init()) // removed
-	entities.AddEntity("1", meminfo.Init(logsFunc, ctx, options.Options{Interval: 2}))
-	entities.AddEntity("2", cpustat.Init(logsFunc, ctx, options.Options{Interval: 2}))
-	entities.AddEntity("3", processes.Init(logsFunc, ctx, options.Options{
+	entities.AddEntity("1", meminfo.Init(ctx, options.Options{Interval: 2}))
+	entities.AddEntity("2", cpustat.Init(ctx, options.Options{Interval: 2}))
+	entities.AddEntity("3", pScene.Init(ctx, options.Options{
 		Interval:       3,
 		MenuController: control,
 	}))

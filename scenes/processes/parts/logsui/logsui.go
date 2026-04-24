@@ -1,4 +1,4 @@
-package layout
+package logsui
 
 // used when showing logs tab
 const LOGS_PADDING = 22

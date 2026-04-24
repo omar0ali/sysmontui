@@ -9,8 +9,8 @@ import (
 	"github.com/gdamore/tcell/v3"
 	"github.com/gdamore/tcell/v3/color"
 	"github.com/omar0ali/sysmon/pkg"
+	"github.com/omar0ali/sysmontui/scenes"
 	"github.com/omar0ali/sysmontui/scenes/options"
-	"github.com/omar0ali/sysmontui/scenes/perm/controls"
 	"github.com/omar0ali/sysmontui/screentui"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
 	"github.com/omar0ali/sysmontui/screentui/window"
@@ -20,16 +20,13 @@ type CpuStat struct {
 	mu       sync.RWMutex
 	cpuUsage []float64
 	avg      float64
-	logsFunc controls.LogsControl
 }
 
-func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options) *CpuStat {
+func Init(ctx context.Context, op options.Options) *CpuStat {
 
-	cpustats := &CpuStat{
-		logsFunc: logsFunc,
-	}
+	cpustats := &CpuStat{}
 
-	cpustats.logsFunc("Reading cpu stats...")
+	scenes.Log("Reading cpu stats...")
 
 	go func(ctx context.Context, cs *CpuStat, op options.Options) {
 		prev, _ := pkg.ReadCpuStat()

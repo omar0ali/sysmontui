@@ -1,4 +1,4 @@
-package processes
+package pScene
 
 import (
 	"context"
@@ -10,62 +10,55 @@ import (
 	"github.com/gdamore/tcell/v3"
 	"github.com/gdamore/tcell/v3/color"
 	"github.com/omar0ali/sysmon/pkg"
+	"github.com/omar0ali/sysmontui/scenes"
 	"github.com/omar0ali/sysmontui/scenes/options"
-	"github.com/omar0ali/sysmontui/scenes/perm/controls"
 	"github.com/omar0ali/sysmontui/scenes/perm/effects"
+	"github.com/omar0ali/sysmontui/scenes/processes"
+	"github.com/omar0ali/sysmontui/scenes/processes/parts/killui"
+	"github.com/omar0ali/sysmontui/scenes/processes/parts/searchui"
 	"github.com/omar0ali/sysmontui/screentui"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
 	"github.com/omar0ali/sysmontui/screentui/window"
 )
 
-type process struct {
-	Name       string
-	PID        int
-	CPUPercent float64
-	MEMUsage   uint64
-}
-
 type ProcessesScene struct {
 	mu sync.RWMutex
 
-	Logs controls.LogsControl
-
-	processes    []*process
-	scrollWindow scrollWindow
+	processes    []*processes.Process
+	ScrollWindow ScrollWindow
 
 	// order
 	sortedBy sortBy
 
-	// actions
-	searchState *SearchState
-	search      *search
-	kill        *kill
+	// actions ui
+	SearchState *searchui.State
+	Search      *searchui.Search
+	kill        *killui.Kill
 
-	selectedProcess *process
+	selectedProcess *processes.Process
 
-	mController interfaces.MenuController
+	MenuController interfaces.MenuController
 }
 
-func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options) *ProcessesScene {
+func Init(ctx context.Context, op options.Options) *ProcessesScene {
 
-	processes := &ProcessesScene{
-		Logs:      logsFunc,
-		processes: []*process{},
+	pScene := &ProcessesScene{
+		processes: []*processes.Process{},
 		sortedBy:  sortByName,
 
-		scrollWindow: scrollWindow{},
+		ScrollWindow: ScrollWindow{},
 
-		searchState: &SearchState{
-			isLoading: true,
+		SearchState: &searchui.State{
+			IsLoading: true,
 		},
 	}
 
 	// this used to lock access to to change current page when typing is required.
-	processes.mController = interfaces.MustMenuController(op.MenuController)
+	pScene.MenuController = interfaces.MustMenuController(op.MenuController)
 
-	processes.Logs("Reading processes...")
+	scenes.Log("Reading processes...")
 
-	go func(ctx context.Context, processes *ProcessesScene, op options.Options) {
+	go func(ctx context.Context, pScene *ProcessesScene, op options.Options) {
 		ticker := time.NewTicker(time.Second * time.Duration(op.Interval))
 		defer ticker.Stop()
 
@@ -120,8 +113,8 @@ func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options
 						d.Iowait + d.Irq + d.SoftIrq
 				}
 
-				processes.mu.Lock()
-				processes.processes = processes.processes[:0] // reset list
+				pScene.mu.Lock()
+				pScene.processes = pScene.processes[:0] // reset list
 
 				counter := 1
 				for pid, p := range procs {
@@ -141,53 +134,59 @@ func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options
 
 					// -- apply search
 					name := strings.ToLower(p.Stat.Comm)
-					search := strings.TrimSpace(strings.ToLower(processes.searchState.strSearch))
+					search := strings.TrimSpace(strings.ToLower(pScene.SearchState.StrSearch))
 
 					if search != "" && !strings.Contains(name, search) {
 						continue
 					}
 
 					// --
-					processes.processes = append(processes.processes, &process{name, pid, cpuPercent, memUsage})
+					pScene.processes = append(pScene.processes, &processes.Process{
+						Name:       name,
+						PID:        pid,
+						CPUPercent: cpuPercent,
+						MEMUsage:   memUsage,
+					})
+
 					counter++
 					// update baseline
 					prevProcCPU[pid] = curr
 				}
-				processes.mu.Unlock()
+				pScene.mu.Unlock()
 
 				prevCPU = currCPU
 			}
 			// disable loading when done. // status will show 'No Processes' if the list is empty
-			processes.searchState.isLoading = false
+			pScene.SearchState.IsLoading = false
 		}
-	}(ctx, processes, op)
+	}(ctx, pScene, op)
 
-	return processes
+	return pScene
 }
 
 func (p *ProcessesScene) Update(d float64) {
 	// update status | only if its true
-	if p.searchState.isLoading {
+	if p.SearchState.IsLoading {
 		p.processes = p.processes[:0]
 	}
 }
 
 func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
-	if p.search != nil {
-		p.search.Render(s)
+	if p.Search != nil {
+		p.Search.Render(s)
 	}
 	if p.kill != nil {
 		p.kill.Render(s)
 	}
 
-	p.scrollWindow.Render(p, s)
+	p.ScrollWindow.Render(p, s)
 
 	s.Color(color.White)
 	window.Text(s, screentui.P(1, 1), "Page: Running Processes") // title
 
 	searchON := ""
 
-	if p.searchState.strSearch != "" {
+	if p.SearchState.StrSearch != "" {
 		searchON = "| [q] to reset search"
 	}
 
@@ -197,7 +196,7 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 	window.Text(s,
 		screentui.P(float64(startXPos), float64(startYPos)),
 		fmt.Sprintf("Total Processes: %d | Displaying (%d - %d) %s", len(p.processes),
-			p.scrollWindow.start, p.scrollWindow.end, searchON,
+			p.ScrollWindow.Start, p.ScrollWindow.End, searchON,
 		),
 	)
 
@@ -211,14 +210,14 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 
 	// displaying status on screen
 	if len(p.processes) == 0 {
-		if p.searchState.isLoading {
-			p.searchState.status = "Loading " + string(effects.Spinner(7, 150))
+		if p.SearchState.IsLoading {
+			p.SearchState.Status = "Loading " + string(effects.Spinner(7, 150))
 		} else {
-			p.searchState.status = "No Processes"
+			p.SearchState.Status = "No Processes"
 		}
 		window.Text(s,
 			screentui.P(float64(startXPos), float64(startYPos+3)),
-			p.searchState.status,
+			p.SearchState.Status,
 		)
 		return
 	}
@@ -226,13 +225,13 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 	// sort processes by name default
 	sortProcesses(p.sortedBy, p.processes)
 
-	startProcessIndex := p.scrollWindow.currentIndex + startYPos + 3
+	startProcessIndex := p.ScrollWindow.CurrentIndex + startYPos + 3
 
 	// this will avoid index out of bound, triggered when hiding logs
-	lastIndex := min(p.scrollWindow.end, len(p.processes))
+	lastIndex := min(p.ScrollWindow.End, len(p.processes))
 
 	// displaying list of processes
-	for y, proc := range p.processes[p.scrollWindow.start:lastIndex] {
+	for y, proc := range p.processes[p.ScrollWindow.Start:lastIndex] {
 		var name string
 		if startProcessIndex == startYPos+y+3 {
 			name = fmt.Sprintf("[K] %s", proc.Name)
@@ -254,8 +253,8 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 
 func (p *ProcessesScene) Events(ev tcell.Event) {
 	// search processes events
-	if p.search != nil {
-		p.search.Events(p, ev)
+	if p.Search != nil {
+		p.Search.Events(p, ev)
 		return
 	}
 
@@ -266,46 +265,68 @@ func (p *ProcessesScene) Events(ev tcell.Event) {
 	}
 
 	// scroll window events
-	p.scrollWindow.Events(p, ev)
+	p.ScrollWindow.Events(p, ev)
 
 	// processes events
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
 		if ev.Str() == "T" {
 			p.sortedBy = nextSort(p.sortedBy)
-			p.Logs(fmt.Sprintf("Sorted By %s", p.sortedBy.String()))
+			scenes.Log(fmt.Sprintf("Sorted By %s", p.sortedBy.String()))
 		} else if ev.Str() == "t" {
 			var order string
 			if toggleDesc() {
 				order = "Descending"
 			} else {
 				order = "Ascending"
-
 			}
-			p.Logs("Order: " + order)
+			scenes.Log("Order: " + order)
 		} else if ev.Str() == "/" {
-			p.mController.Lock()
-			p.search = &search{}
-			p.Logs("Search ON")
+			p.MenuController.Lock()
+			p.Search = &searchui.Search{}
+			scenes.Log("Search ON")
 		} else if ev.Str() == "K" {
 			if len(p.processes) < 1 {
-				p.Logs("Cannot perform this action now.")
+				scenes.Log("Cannot perform this action now.")
 				return
 			}
-			p.mController.Lock()
-			p.kill = &kill{
-				process: p.selectedProcess,
+			p.MenuController.Lock()
+			p.kill = &killui.Kill{
+				Process: p.selectedProcess,
 			}
-			p.Logs("Process Selected: " + p.selectedProcess.Name + " - Waiting action...")
+			scenes.Log("Process Selected: " + p.selectedProcess.Name + " - Waiting action...")
 		} else if ev.Str() == "q" {
 			// clear / reset current invoked search
-			if p.searchState.strSearch != "" {
-				p.searchState.isLoading = true
-				p.scrollWindow.currentIndex = 0
-				p.Logs("Search cleared...")
-				p.searchState.strSearch = ""
+			if p.SearchState.StrSearch != "" {
+				p.SearchState.IsLoading = true
+				p.ScrollWindow.CurrentIndex = 0
+				scenes.Log("Search cleared...")
+				p.SearchState.StrSearch = ""
 			}
-			p.mController.Unlock()
+			p.MenuController.Unlock()
 		}
 	}
+}
+
+func (p *ProcessesScene) CloseingKillUI() {
+	p.kill = nil
+	p.MenuController.Unlock()
+	p.ScrollWindow.CurrentIndex = 0
+}
+
+func (p *ProcessesScene) ClosingSearchWith(search string) {
+	if search == "" {
+		if p.SearchState.StrSearch != "" {
+			scenes.Log("Search Canceled / Reset")
+			p.SearchState.IsLoading = true
+		}
+	}
+	p.ScrollWindow.CurrentIndex = 0
+	p.SearchState.StrSearch = search
+	p.Search = nil
+	p.MenuController.Unlock()
+}
+
+func (p *ProcessesScene) SetLoading() {
+	p.SearchState.IsLoading = true
 }
