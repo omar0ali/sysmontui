@@ -15,6 +15,7 @@
 - [x] Support sorting processes by different fields (name, PID, etc.) and ordering (Ascending, Descending)
 - [x] Search processes by name
 - [x] Kill process
+- [X] Show and Hide logs using `[l]` key
 - [ ] UI Polishing & Clean up
 
 ### Requirements

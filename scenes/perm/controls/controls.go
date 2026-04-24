@@ -12,6 +12,8 @@ import (
 
 type LogsControl func(string)
 
+var ShowLogs bool
+
 type Controls struct {
 	defaultListLimit int
 	listOfControls   []string
@@ -35,6 +37,9 @@ func Init(s interfaces.SceneControl) *Controls {
 		sceneControl:     s,
 	}
 
+	ShowLogs = true
+
+	// start with :
 	// Memory View / Page
 	// Additional menu
 	controls.MenuAddToList("-------------------")
@@ -53,6 +58,7 @@ func (c *Controls) LogsAddToList(s string) {
 		c.listOfLogs = c.listOfLogs[:limit]
 	}
 }
+
 func (c *Controls) MenuAddToList(s string) {
 	c.listOfControls = append(c.listOfControls, s)
 }
@@ -64,6 +70,7 @@ func (c *Controls) MenuResetList() {
 }
 
 func (c *Controls) Update(d float64) {}
+
 func (c *Controls) Render(s interfaces.ScreenControl) {
 	s.Color(color.YellowGreen)
 	w, h := s.Size()
@@ -84,9 +91,14 @@ func (c *Controls) Render(s interfaces.ScreenControl) {
 		window.Text(s, screentui.P(2, float64(startY+y)), text)
 	}
 
+	// show | hide logs
+	if !ShowLogs {
+		return
+	}
+
 	// footer line for logs
 	window.LineHorizontalWithStartAndEnd(s, 31, w, h-15, tcell.RuneHLine) // for ui
-	window.Text(s, screentui.P(33, float64(h)-14), "-- Logs --")
+	window.Text(s, screentui.P(33, float64(h)-14), "-- Logs -- | [l] Show/Hide Logs")
 	window.LineHorizontalWithStartAndEnd(s, 31, w, h-13, tcell.RuneHLine) // for ui
 
 	startY = h - 12
@@ -101,9 +113,13 @@ func (c *Controls) Events(ev tcell.Event) {
 	if c.lockMenu {
 		return
 	}
+
 	switch ev := ev.(type) {
 	case *tcell.EventKey:
 		s := ev.Str()
+		if s == "l" {
+			ShowLogs = !ShowLogs
+		}
 		if len(s) == 1 && s[0] >= '1' && s[0] <= '3' {
 			c.MenuResetList()
 

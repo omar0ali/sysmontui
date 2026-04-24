@@ -49,10 +49,12 @@ type ProcessesScene struct {
 func Init(logsFunc controls.LogsControl, ctx context.Context, op options.Options) *ProcessesScene {
 
 	processes := &ProcessesScene{
-		Logs:         logsFunc,
-		processes:    []*process{},
-		sortedBy:     sortByName,
+		Logs:      logsFunc,
+		processes: []*process{},
+		sortedBy:  sortByName,
+
 		scrollWindow: scrollWindow{},
+
 		searchState: &SearchState{
 			isLoading: true,
 		},
@@ -218,9 +220,13 @@ func (p *ProcessesScene) Render(s interfaces.ScreenControl) {
 	// sort processes by name default
 	sortProcesses(p.sortedBy, p.processes)
 
-	// displaying list of processes
 	startProcessIndex := p.scrollWindow.currentIndex + startYPos + 3
-	for y, proc := range p.processes[p.scrollWindow.start:p.scrollWindow.end] {
+
+	// this will avoid index out of bound, triggered when hiding logs
+	lastIndex := min(p.scrollWindow.end, len(p.processes))
+
+	// displaying list of processes
+	for y, proc := range p.processes[p.scrollWindow.start:lastIndex] {
 		var name string
 		if startProcessIndex == startYPos+y+3 {
 			name = fmt.Sprintf("[K] %s", proc.Name)

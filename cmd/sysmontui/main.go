@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"runtime"
+	"runtime/debug"
 	"time"
 
 	"github.com/omar0ali/sysmontui/scenes/cpustat"
@@ -29,7 +30,7 @@ func main() {
 	defer func() {
 		if r := recover(); r != nil {
 			s.Exit()
-			log.Println("Fatal error:", r)
+			log.Printf("Fatal error: %v\nStack trace:\n%s", r, debug.Stack())
 		}
 	}()
 
