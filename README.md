@@ -29,11 +29,12 @@ Linux only (uses /proc)
 ![Sysmontui screenshot processes](assets/screenshots/processes.png)
 #### Sorting By (name, pid, cpu usage) and ordering (asc, desc)
 ![Sysmontui screenshot processes sorting 1](assets/screenshots/sort(1).png)
-![Sysmontui screenshot processes sorting 2](assets/screenshots/sort(2).png)
 #### Search processes by name
 ![Sysmontui screenshot search](assets/screenshots/search.png)
 #### Kill process - sending SIGTERM
 ![Sysmontui screenshot sigterm](assets/screenshots/sigterm.png)
+#### Show | Hide Logs View
+![Sysmontui Logs Tab](assets/screenshots/logs.png)
 
 ## Installation
 
@@ -51,9 +52,6 @@ go build -o build/sysmontui cmd/sysmontui/main.go
 ```bash
 go install github.com/omar0ali/sysmontui/cmd/sysmontui@latest
 ```
-
-### Status
-Work in progress
 
 ## Third-Party Licenses
 This project uses [tcell](https://github.com/gdamore/tcell) (Apache License 2.0):
