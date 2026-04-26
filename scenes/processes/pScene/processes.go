@@ -40,13 +40,15 @@ type ProcessesScene struct {
 	MenuController interfaces.MenuController
 }
 
-func Init(ctx context.Context, op options.Options) *ProcessesScene {
+func Init(op options.Settings) *ProcessesScene {
 
 	pScene := &ProcessesScene{
 		processes: []*processes.Process{},
 		sortedBy:  sortByName,
 
-		ScrollWindow: ScrollWindow{},
+		ScrollWindow: ScrollWindow{
+			LogsUiView: op.LogsUIControl,
+		},
 
 		SearchState: &searchui.State{
 			IsLoading: true,
@@ -58,7 +60,7 @@ func Init(ctx context.Context, op options.Options) *ProcessesScene {
 
 	scenes.Log("Reading processes...")
 
-	go func(ctx context.Context, pScene *ProcessesScene, op options.Options) {
+	go func(ctx context.Context, pScene *ProcessesScene, op options.Settings) {
 		ticker := time.NewTicker(time.Second * time.Duration(op.Interval))
 		defer ticker.Stop()
 
@@ -159,7 +161,7 @@ func Init(ctx context.Context, op options.Options) *ProcessesScene {
 			// disable loading when done. // status will show 'No Processes' if the list is empty
 			pScene.SearchState.IsLoading = false
 		}
-	}(ctx, pScene, op)
+	}(op.Context, pScene, op)
 
 	return pScene
 }

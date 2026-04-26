@@ -14,6 +14,7 @@ import (
 	"github.com/omar0ali/sysmontui/scenes/perm/controls"
 	"github.com/omar0ali/sysmontui/scenes/perm/cpuinfo"
 	"github.com/omar0ali/sysmontui/scenes/processes/pScene"
+	"github.com/omar0ali/sysmontui/scenes/processes/parts/logsui"
 	"github.com/omar0ali/sysmontui/screentui/entity"
 	"github.com/omar0ali/sysmontui/screentui/window"
 )
@@ -46,12 +47,12 @@ func main() {
 	// this used to close all the go routines that are running
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// add entities to display (each scene will have their own list of entities)
-	// each entity must contain (Init, Update, Render, Events) functions / actions
+	// logsUIView
+	logsuiViewControl := logsui.New()
 
 	// permanent entities (always shown on all scenes)
 	entities.AddPermEntity(
-		controls.Init(entities),
+		controls.Init(entities, logsuiViewControl),
 		cpuinfo.Init(),
 	)
 
@@ -63,14 +64,22 @@ func main() {
 	// logs func can be used anywhere, when its required
 	scenes.SetLogger(control.LogsAddToList)
 
+	// setting options
+	ops := options.Settings{
+		Interval:       2,
+		Context:        ctx,               // context
+		LogsUIControl:  logsuiViewControl, // logsUIView Control
+		MenuController: control,           // control
+	}
+
+	// add entities to display (each scene will have their own list of entities)
+	// each entity must contain (Init, Update, Render, Events) functions / actions
+
 	// non perm scenes
 	// entities.AddEntity("0", home.Init()) // removed
-	entities.AddEntity("1", meminfo.Init(ctx, options.Options{Interval: 2}))
-	entities.AddEntity("2", cpustat.Init(ctx, options.Options{Interval: 2}))
-	entities.AddEntity("3", pScene.Init(ctx, options.Options{
-		Interval:       3,
-		MenuController: control,
-	}))
+	entities.AddEntity("1", meminfo.Init(ops))
+	entities.AddEntity("2", cpustat.Init(ops))
+	entities.AddEntity("3", pScene.Init(ops))
 
 	entities.SetScene("1") // set current scene to be displayed / rendered
 

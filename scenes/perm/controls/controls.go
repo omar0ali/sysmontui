@@ -16,11 +16,12 @@ type Controls struct {
 	listOfControls   []string
 	listOfLogs       []string
 	sceneControl     interfaces.SceneControl
+	logsControl      logsui.LogsView
 
 	lockMenu bool
 }
 
-func Init(s interfaces.SceneControl) *Controls {
+func Init(s interfaces.SceneControl, logsUiViewContro logsui.LogsView) *Controls {
 	listOfControls := []string{
 		"[1] Memory Info",
 		"[2] CPU Status",
@@ -32,9 +33,8 @@ func Init(s interfaces.SceneControl) *Controls {
 		listOfControls:   listOfControls,
 		defaultListLimit: len(listOfControls),
 		sceneControl:     s,
+		logsControl:      logsUiViewContro,
 	}
-
-	logsui.ShowLogs = true
 
 	// start with :
 	// Memory View / Page
@@ -89,7 +89,7 @@ func (c *Controls) Render(s interfaces.ScreenControl) {
 	}
 
 	// show | hide logs
-	if !logsui.ShowLogs {
+	if !c.logsControl.IsVisible() {
 		// footer line for logs
 		window.LineHorizontalWithStartAndEnd(s, 31, w, h-5, tcell.RuneHLine) // for ui
 		window.Text(s, screentui.P(33, float64(h)-4), "Logs | [l] Show Logs")
@@ -118,7 +118,7 @@ func (c *Controls) Events(ev tcell.Event) {
 	case *tcell.EventKey:
 		s := ev.Str()
 		if s == "l" {
-			logsui.ShowLogs = !logsui.ShowLogs
+			c.logsControl.ToggleLogsView()
 		}
 		if len(s) == 1 && s[0] >= '1' && s[0] <= '3' {
 			c.MenuResetList()

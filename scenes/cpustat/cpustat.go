@@ -22,13 +22,13 @@ type CpuStat struct {
 	avg      float64
 }
 
-func Init(ctx context.Context, op options.Options) *CpuStat {
+func Init(op options.Settings) *CpuStat {
 
 	cpustats := &CpuStat{}
 
 	scenes.Log("Reading cpu stats...")
 
-	go func(ctx context.Context, cs *CpuStat, op options.Options) {
+	go func(ctx context.Context, cs *CpuStat, op options.Settings) {
 		prev, _ := pkg.ReadCpuStat()
 		ticker := time.NewTicker(time.Second * time.Duration(op.Interval))
 		defer ticker.Stop()
@@ -65,7 +65,7 @@ func Init(ctx context.Context, op options.Options) *CpuStat {
 				prev = curr // update prev for the next iteration
 			}
 		}
-	}(ctx, cpustats, op)
+	}(op.Context, cpustats, op)
 
 	return cpustats
 }

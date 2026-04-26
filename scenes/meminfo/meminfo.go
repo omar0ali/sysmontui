@@ -24,7 +24,7 @@ type MemInfo struct {
 	unitStr string
 }
 
-func Init(ctx context.Context, op options.Options) *MemInfo {
+func Init(op options.Settings) *MemInfo {
 	meminfo := &MemInfo{
 		unit:    pkg.MB,
 		unitStr: "MB",
@@ -39,7 +39,7 @@ func Init(ctx context.Context, op options.Options) *MemInfo {
 		meminfo.mu.Unlock()
 	}
 
-	go func(ctx context.Context, mi *MemInfo, op options.Options) {
+	go func(ctx context.Context, mi *MemInfo, op options.Settings) {
 		ticker := time.NewTicker(time.Second * time.Duration(op.Interval))
 		defer ticker.Stop()
 
@@ -58,7 +58,7 @@ func Init(ctx context.Context, op options.Options) *MemInfo {
 				mi.mu.Unlock()
 			}
 		}
-	}(ctx, meminfo, op)
+	}(op.Context, meminfo, op)
 
 	return meminfo
 }

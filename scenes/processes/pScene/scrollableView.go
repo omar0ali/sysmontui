@@ -8,6 +8,9 @@ import (
 
 type ScrollWindow struct {
 	Start, End, Max, CurrentIndex int
+
+	// logsui
+	LogsUiView logsui.LogsView
 }
 
 func (sc *ScrollWindow) Events(p *ProcessesScene, ev tcell.Event) {
@@ -53,16 +56,9 @@ func (sc *ScrollWindow) Render(p *ProcessesScene, s interfaces.ScreenControl) {
 
 	_, h := s.Size()
 
-	var paddingFooter int
-	if logsui.ShowLogs {
-		paddingFooter = logsui.LOGS_PADDING
-	} else {
-		paddingFooter = logsui.LOGS_NO_PADDING
-	}
-
 	// get the latest hight of the screen -
 	// used for the scrollable area in processes page
-	sc.Max = h - paddingFooter
+	sc.Max = h - sc.LogsUiView.GetPaddingSize()
 
 	// this fix a problem when .start is at a position that > than what it
 	// its displayed. When searching, it might crash.
