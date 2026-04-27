@@ -10,11 +10,11 @@ import (
 	"github.com/omar0ali/sysmontui/scenes"
 	"github.com/omar0ali/sysmontui/scenes/cpustat"
 	"github.com/omar0ali/sysmontui/scenes/meminfo"
-	"github.com/omar0ali/sysmontui/scenes/options"
 	"github.com/omar0ali/sysmontui/scenes/perm/controls"
 	"github.com/omar0ali/sysmontui/scenes/perm/cpuinfo"
 	"github.com/omar0ali/sysmontui/scenes/processes/pScene"
 	"github.com/omar0ali/sysmontui/scenes/processes/parts/logsui"
+	"github.com/omar0ali/sysmontui/scenes/settings"
 	"github.com/omar0ali/sysmontui/screentui/entity"
 	"github.com/omar0ali/sysmontui/screentui/window"
 )
@@ -47,36 +47,32 @@ func main() {
 	// this used to close all the go routines that are running
 	ctx, cancel := context.WithCancel(context.Background())
 
-	// logsUIView
-	logsuiViewControl := logsui.New()
+	logsuiView := logsui.New()
+
+	// scenes setup
+	controlScene := controls.Init(entities, logsuiView)
+
+	// logs func can be used anywhere, when its required
+	scenes.SetLogger(controlScene.LogsAddToList)
 
 	// permanent entities (always shown on all scenes)
 	entities.AddPermEntity(
-		controls.Init(entities, logsuiViewControl),
+		controlScene,
 		cpuinfo.Init(),
 	)
 
-	// control a Permanent Scene Menu
-	control := entity.GetAllEntitiesByType[*controls.Controls](
-		entities.GetPermEntities(),
-	)[0]
-
-	// logs func can be used anywhere, when its required
-	scenes.SetLogger(control.LogsAddToList)
-
 	// setting options
-	ops := options.Settings{
-		Interval:       2,
-		Context:        ctx,               // context
-		LogsUIControl:  logsuiViewControl, // logsUIView Control
-		MenuController: control,           // control
-	}
+	ops := settings.New(
+		2,
+		controlScene, // control
+		ctx,          // context
+		logsuiView,   // logsUIView Control
+	)
 
 	// add entities to display (each scene will have their own list of entities)
 	// each entity must contain (Init, Update, Render, Events) functions / actions
 
 	// non perm scenes
-	// entities.AddEntity("0", home.Init()) // removed
 	entities.AddEntity("1", meminfo.Init(ops))
 	entities.AddEntity("2", cpustat.Init(ops))
 	entities.AddEntity("3", pScene.Init(ops))

@@ -11,7 +11,7 @@ import (
 	"github.com/gdamore/tcell/v3/color"
 	"github.com/omar0ali/sysmon/pkg"
 	"github.com/omar0ali/sysmontui/scenes"
-	"github.com/omar0ali/sysmontui/scenes/options"
+	"github.com/omar0ali/sysmontui/scenes/settings"
 	"github.com/omar0ali/sysmontui/screentui"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
 	"github.com/omar0ali/sysmontui/screentui/window"
@@ -24,7 +24,7 @@ type MemInfo struct {
 	unitStr string
 }
 
-func Init(op options.Settings) *MemInfo {
+func Init(op settings.Settings) *MemInfo {
 	meminfo := &MemInfo{
 		unit:    pkg.MB,
 		unitStr: "MB",
@@ -39,7 +39,7 @@ func Init(op options.Settings) *MemInfo {
 		meminfo.mu.Unlock()
 	}
 
-	go func(ctx context.Context, mi *MemInfo, op options.Settings) {
+	go func(ctx context.Context, mi *MemInfo, op settings.Settings) {
 		ticker := time.NewTicker(time.Second * time.Duration(op.Interval))
 		defer ticker.Stop()
 

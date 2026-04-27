@@ -10,7 +10,7 @@ import (
 	"github.com/gdamore/tcell/v3/color"
 	"github.com/omar0ali/sysmon/pkg"
 	"github.com/omar0ali/sysmontui/scenes"
-	"github.com/omar0ali/sysmontui/scenes/options"
+	"github.com/omar0ali/sysmontui/scenes/settings"
 	"github.com/omar0ali/sysmontui/screentui"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
 	"github.com/omar0ali/sysmontui/screentui/window"
@@ -22,13 +22,13 @@ type CpuStat struct {
 	avg      float64
 }
 
-func Init(op options.Settings) *CpuStat {
+func Init(op settings.Settings) *CpuStat {
 
 	cpustats := &CpuStat{}
 
 	scenes.Log("Reading cpu stats...")
 
-	go func(ctx context.Context, cs *CpuStat, op options.Settings) {
+	go func(ctx context.Context, cs *CpuStat, op settings.Settings) {
 		prev, _ := pkg.ReadCpuStat()
 		ticker := time.NewTicker(time.Second * time.Duration(op.Interval))
 		defer ticker.Stop()

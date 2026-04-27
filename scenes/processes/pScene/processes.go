@@ -11,11 +11,11 @@ import (
 	"github.com/gdamore/tcell/v3/color"
 	"github.com/omar0ali/sysmon/pkg"
 	"github.com/omar0ali/sysmontui/scenes"
-	"github.com/omar0ali/sysmontui/scenes/options"
 	"github.com/omar0ali/sysmontui/scenes/perm/effects"
 	"github.com/omar0ali/sysmontui/scenes/processes"
 	"github.com/omar0ali/sysmontui/scenes/processes/parts/killui"
 	"github.com/omar0ali/sysmontui/scenes/processes/parts/searchui"
+	"github.com/omar0ali/sysmontui/scenes/settings"
 	"github.com/omar0ali/sysmontui/screentui"
 	"github.com/omar0ali/sysmontui/screentui/interfaces"
 	"github.com/omar0ali/sysmontui/screentui/window"
@@ -40,7 +40,7 @@ type ProcessesScene struct {
 	MenuController interfaces.MenuController
 }
 
-func Init(op options.Settings) *ProcessesScene {
+func Init(op settings.Settings) *ProcessesScene {
 
 	pScene := &ProcessesScene{
 		processes: []*processes.Process{},
@@ -60,7 +60,7 @@ func Init(op options.Settings) *ProcessesScene {
 
 	scenes.Log("Reading processes...")
 
-	go func(ctx context.Context, pScene *ProcessesScene, op options.Settings) {
+	go func(ctx context.Context, pScene *ProcessesScene, op settings.Settings) {
 		ticker := time.NewTicker(time.Second * time.Duration(op.Interval))
 		defer ticker.Stop()
 
